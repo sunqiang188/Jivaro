@@ -35,6 +35,14 @@ void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
   UsdGeomXformCommonAPI api(prim);
   api.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
 
+  bool resetsXformStack(false);
+  std::vector<UsdGeomXformOp> ops =  xformable.GetOrderedXformOps(&resetsXformStack);
+
+  for(auto& op: ops) {
+    std::cout << op.GetOpName() << ": " << op.GetOpType() << "," << op.GetPrecision() << std::endl;
+    prim.RemoveProperty(op.GetAttr().GetName());
+  }
+
   xformable.ClearXformOpOrder();
   api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
 }
@@ -998,9 +1006,9 @@ _ResolveRotation(ManipTargetDesc& target,
   UsdGeomXformCommonAPI& xformApi, const GfMatrix4d& matrix,
   UsdTimeCode activeTime)
 {
-  const GfVec3d xAxis = target.parent.GetRow3(0);
-  const GfVec3d yAxis = target.parent.GetRow3(1);
-  const GfVec3d zAxis = target.parent.GetRow3(2);
+  const GfVec3d xAxis = target.parent.GetRow3(0).GetNormalized();
+  const GfVec3d yAxis = target.parent.GetRow3(1).GetNormalized();
+  const GfVec3d zAxis = target.parent.GetRow3(2).GetNormalized();
 
   // Get latest rotation values to give a hint to the decompose function
   ManipXformVectors vectors;
@@ -1010,11 +1018,10 @@ _ResolveRotation(ManipTargetDesc& target,
   double thetaTw = GfDegreesToRadians(vectors.rotation[0]);
   double thetaFB = GfDegreesToRadians(vectors.rotation[1]);
   double thetaLR = GfDegreesToRadians(vectors.rotation[2]);
-  double thetaSw = 0.0;
 
   // Decompose the matrix in angle values
   GfRotation::DecomposeRotation(matrix, xAxis, yAxis, zAxis, 1.0,
-    &thetaTw, &thetaFB, &thetaLR, &thetaSw, true);
+    &thetaTw, &thetaFB, &thetaLR, nullptr, true);
   return std::make_pair(
     GfVec3f(GfRadiansToDegrees(thetaTw), GfRadiansToDegrees(thetaFB), GfRadiansToDegrees(thetaLR)),
     vectors.rotOrder);

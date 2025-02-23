@@ -145,10 +145,8 @@ Index::SetCurrentSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
   if(_editableSceneIndex)
     _finalSceneIndex->RemoveInputScene(_editableSceneIndex);
   _editableSceneIndex = sceneIndex;
-  _finalSceneIndex->AddInputScene(sceneIndex,
-                                  SdfPath::AbsoluteRootPath());
+  _finalSceneIndex->AddInputScene(sceneIndex, SdfPath::AbsoluteRootPath());
 }
-
 
 HdSceneIndexBaseRefPtr 
 Index::GetFinalSceneIndex()

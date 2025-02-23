@@ -261,7 +261,7 @@ protected:
 
 private:
   GfVec3f      _ContraintPointToRotationPlane(const GfRay& ray);
-  float             _radius;
+  float        _radius;
   GfQuatf      _base;
 };
 

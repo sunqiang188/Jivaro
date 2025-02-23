@@ -1055,7 +1055,7 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
       accum += correction;
 
-      velocity = _collision->GetContactVelocity(index, c) * dt;
+      velocity += _collision->GetContactVelocity(index, c) * dt;
 
       numContactUsed++;
     }

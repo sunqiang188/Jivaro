@@ -218,7 +218,7 @@ install(
 )
 
 install(
-  DIRECTORY ../fonts ../icons DESTINATION bin
+  DIRECTORY ../icons DESTINATION bin
 )
 
 install(

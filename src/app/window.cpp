@@ -642,7 +642,6 @@ Window::DrawPopup(PopupUI* popup)
 void 
 Window::SetupImgui()
 {
-  static float fontSizes[3] = { 16.f,32.f,64.f };
   // setup imgui context
   IMGUI_CHECKVERSION();
   _context = ImGui::CreateContext(SHARED_ATLAS);
