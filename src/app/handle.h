@@ -250,6 +250,8 @@ private:
 
 class RotateHandle : public BaseHandle {
 public:
+using RotationDesc = std::pair<GfVec3f, UsdGeomXformCommonAPI::RotationOrder>;
+
   RotateHandle();
 
   void BeginUpdate(float x, float y, float width, float height) override;
@@ -258,6 +260,9 @@ public:
 
 protected:
   void _UpdateTargets(bool interacting) override;
+  RotationDesc _ResolveRotation(ManipTargetDesc& target,
+    UsdGeomXformCommonAPI& xformApi, const GfMatrix4d& matrix,
+    UsdTimeCode activeTime);
 
 private:
   GfVec3f      _ContraintPointToRotationPlane(const GfRay& ray);

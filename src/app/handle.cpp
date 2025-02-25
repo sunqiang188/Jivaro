@@ -307,16 +307,15 @@ BaseHandle::ResetSelection()
       const GfMatrix4f pivotMatrix = GfMatrix4f(1.f).SetTranslate(vectors.pivot);
       GfMatrix4f world( rotationMatrix * pivotMatrix * translationMatrix * parentMatrix);
       _targets.push_back({item.path, world, 
-        GfMatrix4f(xformCache.GetLocalTransformation(prim, &resetXformCache)), invParentMatrix, vectors});
+        GfMatrix4f(xformCache.GetLocalTransformation(prim, &resetXformCache)), parentMatrix, vectors});
     }
   }
   _xformCache.Swap(xformCache);
   _ComputeCOGMatrix();
   
   GfMatrix4f invMatrix = _matrix.GetInverse();
-  for(auto& target: _targets) {
+  for(auto& target: _targets) 
     target.offset = target.base * invMatrix;
-  }
 
   SetSRTFromMatrix();
   _displayMatrix = _ExtractRotationAndTranslateFromMatrix();
@@ -519,10 +518,9 @@ BaseHandle::_ComputeCOGMatrix()
     const GfMatrix4d toManipulator = pivotMat * transMat * parentToWorld;
     transform.SetMatrix(toManipulator.GetOrthonormalized());
     */
-    bool resetsXformStack = false;
     transform.SetMatrix(GfMatrix4d(target.base));
     _position += GfVec3f(transform.GetTranslation());
-    _scale += GfVec3f(transform.GetScale());
+    //_scale += GfVec3f(transform.GetScale());
     _rotation *= GfQuatf(transform.GetRotation().GetQuat());
         
     ++numPrims;
@@ -531,7 +529,7 @@ BaseHandle::_ComputeCOGMatrix()
   if(numPrims) {
     float ratio = 1.f / (float)numPrims;
     _position *= ratio;
-    _scale *= ratio;
+    //_scale *= ratio;
     _rotation.Normalize();
 
     _matrix =
@@ -801,7 +799,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
     for (auto& target : _targets) {
       UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-      GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
+      GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent.GetInverse());
       xformApi.SetTranslate(xformMatrix.GetRow3(3) - target.previous.pivot, activeTime);
     }
 
@@ -894,6 +892,7 @@ RotateHandle::RotateHandle()
 void
 RotateHandle::SetVisibility(short axis, short mask)
 {
+  return;
   int bits = 0;
   switch (axis) {
   case AXIS_X:
@@ -998,17 +997,15 @@ RotateHandle::Update(float x, float y, float width, float height)
   }
 }
 
-using RotationDesc = std::pair<GfVec3f, UsdGeomXformCommonAPI::RotationOrder>;
 
-static 
-RotationDesc
-_ResolveRotation(ManipTargetDesc& target,
+RotateHandle::RotationDesc
+RotateHandle::_ResolveRotation(ManipTargetDesc& target,
   UsdGeomXformCommonAPI& xformApi, const GfMatrix4d& matrix,
   UsdTimeCode activeTime)
 {
-  const GfVec3d xAxis = target.parent.GetRow3(0).GetNormalized();
-  const GfVec3d yAxis = target.parent.GetRow3(1).GetNormalized();
-  const GfVec3d zAxis = target.parent.GetRow3(2).GetNormalized();
+  const GfVec3d xAxis = target.parent.GetRow3(0);
+  const GfVec3d yAxis = target.parent.GetRow3(1);
+  const GfVec3d zAxis = target.parent.GetRow3(2);
 
   // Get latest rotation values to give a hint to the decompose function
   ManipXformVectors vectors;
@@ -1018,10 +1015,12 @@ _ResolveRotation(ManipTargetDesc& target,
   double thetaTw = GfDegreesToRadians(vectors.rotation[0]);
   double thetaFB = GfDegreesToRadians(vectors.rotation[1]);
   double thetaLR = GfDegreesToRadians(vectors.rotation[2]);
+  double thetaSw = 0.0;
 
   // Decompose the matrix in angle values
   GfRotation::DecomposeRotation(matrix, xAxis, yAxis, zAxis, 1.0,
-    &thetaTw, &thetaFB, &thetaLR, nullptr, true);
+    &thetaTw, &thetaFB, &thetaLR, &thetaSw, true);
+  
   return std::make_pair(
     GfVec3f(GfRadiansToDegrees(thetaTw), GfRadiansToDegrees(thetaFB), GfRadiansToDegrees(thetaLR)),
     vectors.rotOrder);
@@ -1039,7 +1038,7 @@ RotateHandle::_UpdateTargets(bool interacting)
     for (auto& target : _targets) {
       UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-      GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
+      GfMatrix4d xformMatrix(target.parent.GetInverse() * target.offset * _matrix);
 
       const RotationDesc rotation =
         _ResolveRotation(target, xformApi, xformMatrix, activeTime);
@@ -1053,7 +1052,7 @@ RotateHandle::_UpdateTargets(bool interacting)
       UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
       GfMatrix4f invParentMatrix(
         xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
-      GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
+      GfMatrix4d xformMatrix(target.parent.GetInverse() * target.offset * _matrix);
 
       UsdGeomXformCommonAPI xformApi(xformable.GetPrim());
       const RotationDesc rotation =
