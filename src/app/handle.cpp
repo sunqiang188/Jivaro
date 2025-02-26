@@ -800,13 +800,19 @@ TranslateHandle::_UpdateTargets(bool interacting)
   
   for (auto& target : _targets) {
     UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
-    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    UsdGeomXformCommonAPI xformApi(targetPrim);
+
+    // Get latest rotation values to give a hint to the decompose function
+    ManipXformVectors vectors;
+    xformApi.GetXformVectorsByAccumulation(&vectors.translation, &vectors.rotation, &vectors.scale,
+      &vectors.pivot, &vectors.rotOrder, activeTime);
+
     if(_mode & MODE_LOCAL) 
       xformMatrix = GfMatrix4d(localMatrix * target.base * target.parent.GetInverse() );
     else
       xformMatrix = GfMatrix4d(target.offset * _matrix * target.parent.GetInverse() );
 
-    target.current.translation = GfVec3f(xformMatrix.GetRow3(3));
+    target.current.translation = GfVec3f(xformMatrix.GetRow3(3) - vectors.pivot);
     xformApi.SetTranslate(target.current.translation, activeTime);
   }
   
