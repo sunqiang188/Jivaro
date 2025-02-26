@@ -109,7 +109,7 @@ public:
     , _camera(NULL)
     , _interacting(false)
     , _compensate(compensate)
-    , _mode(MODE_GLOBAL | MODE_COG)
+    , _mode(MODE_LOCAL | MODE_COG)
     , _position(GfVec3d(0.f))
     , _rotation(GfQuatf(1.f))
     , _scale(GfVec3d(1.f))

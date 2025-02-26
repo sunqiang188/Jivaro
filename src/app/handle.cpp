@@ -38,10 +38,8 @@ void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
   bool resetsXformStack(false);
   std::vector<UsdGeomXformOp> ops =  xformable.GetOrderedXformOps(&resetsXformStack);
 
-  for(auto& op: ops) {
-    std::cout << op.GetOpName() << ": " << op.GetOpType() << "," << op.GetPrecision() << std::endl;
+  for(auto& op: ops)
     prim.RemoveProperty(op.GetAttr().GetName());
-  }
 
   xformable.ClearXformOpOrder();
   api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
@@ -1033,36 +1031,28 @@ RotateHandle::_UpdateTargets(bool interacting)
   UsdStageRefPtr stage = model->GetStage();
   UsdTimeCode activeTime = UsdTimeCode::Default();
   Selection* selection = app->GetModel()->GetSelection();
-  if (interacting) {
-    for (auto& target : _targets) {
-      UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
-      UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-      GfMatrix4d xformMatrix(target.parent.GetInverse() * target.offset * _matrix);
 
-      const RotationDesc rotation =
-        _ResolveRotation(target, xformApi, xformMatrix, activeTime);
-      xformApi.SetRotate(rotation.first, rotation.second, activeTime);
-    }
+  GfMatrix4d xformMatrix;
+  GfMatrix4f localMatrix = _matrix * _startMatrix.GetInverse();
+
+  for (auto& target : _targets) {
+    UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    if(_mode & MODE_LOCAL)
+      xformMatrix = GfMatrix4d(target.parent.GetInverse() * localMatrix * target.base);
+    else
+      xformMatrix = GfMatrix4d(target.parent.GetInverse() * target.offset * _matrix);
+
+    const RotationDesc rotation =
+      _ResolveRotation(target, xformApi, xformMatrix, activeTime);
+    target.current.rotation = rotation.first;
+    target.current.rotOrder = rotation.second;
+    xformApi.SetRotate(rotation.first, rotation.second, activeTime);
   }
-  else {
-    UsdGeomXformCache xformCache(activeTime);
-    for (auto& target : _targets) {
 
-      UsdGeomXformable xformable(stage->GetPrimAtPath(target.path));
-      GfMatrix4f invParentMatrix(
-        xformCache.GetParentToWorldTransform(xformable.GetPrim()).GetInverse());
-      GfMatrix4d xformMatrix(target.parent.GetInverse() * target.offset * _matrix);
-
-      UsdGeomXformCommonAPI xformApi(xformable.GetPrim());
-      const RotationDesc rotation =
-        _ResolveRotation(target, xformApi, xformMatrix, activeTime);
-
-      target.current.rotation = rotation.first;
-      target.current.rotOrder = rotation.second;
-    }
-    
+  if (!interacting) 
     ADD_COMMAND(RotateCommand, Application::Get()->GetModel()->GetStage(), _targets, activeTime);
-  }
+  
 }
 
 //==================================================================================
