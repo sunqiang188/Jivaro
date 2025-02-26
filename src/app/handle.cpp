@@ -628,6 +628,7 @@ BaseHandle::EndUpdate()
   _interacting = false;
   SetActiveAxis(AXIS_XYZ);
   SetVisibility(AXIS_XYZ, 0b1111111111);
+  ResetSelection();
 }
 
 void
@@ -795,26 +796,25 @@ TranslateHandle::_UpdateTargets(bool interacting)
   UsdStageRefPtr stage = model->GetStage();
   UsdTimeCode activeTime = UsdTimeCode::Default();
   Selection* selection = model->GetSelection();
-  if (interacting) {
-    for (auto& target : _targets) {
-      UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
-      UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-      GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent.GetInverse());
-      xformApi.SetTranslate(xformMatrix.GetRow3(3) - target.previous.pivot, activeTime);
-    }
 
+  GfMatrix4d xformMatrix;
+  GfMatrix4f localMatrix = _matrix * _startMatrix.GetInverse();
+  
+  for (auto& target : _targets) {
+    UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
+    if(_mode & MODE_LOCAL) 
+      xformMatrix = GfMatrix4d(localMatrix * target.base * target.parent.GetInverse() );
+    else
+      xformMatrix = GfMatrix4d(target.offset * _matrix * target.parent.GetInverse() );
+
+    target.current.translation = GfVec3f(xformMatrix.GetRow3(3));
+    xformApi.SetTranslate(target.current.translation, activeTime);
   }
-  else {
-    UsdGeomXformCache xformCache(activeTime);
-    for (auto& target : _targets) {
-      UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
-      GfMatrix4f invParentMatrix(
-        xformCache.GetParentToWorldTransform(targetPrim).GetInverse());
-      GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
-      target.current.translation = GfVec3f(xformMatrix.GetRow3(3)) - target.previous.pivot;
-    }
+  
+  if(!interacting)
     ADD_COMMAND(TranslateCommand, Application::Get()->GetModel()->GetStage(), _targets, activeTime);
-  }
+
 }
 
 void
@@ -892,7 +892,6 @@ RotateHandle::RotateHandle()
 void
 RotateHandle::SetVisibility(short axis, short mask)
 {
-  return;
   int bits = 0;
   switch (axis) {
   case AXIS_X:
@@ -1447,7 +1446,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
     for (auto& target : _targets) {
       UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       UsdGeomXformCommonAPI api(stage->GetPrimAtPath(target.path));
-      GfMatrix4d xformMatrix((target.offset * _matrix) * target.parent);
+      GfMatrix4d xformMatrix(target.parent.GetInverse() * target.offset * _matrix);
       api.SetScale(target.previous.scale + 
         GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]), activeTime);
     }
@@ -1458,7 +1457,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
       UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
       GfMatrix4f invParentMatrix(
         xformCache.GetParentToWorldTransform(targetPrim).GetInverse());
-      GfMatrix4d xformMatrix((target.offset * _matrix) * invParentMatrix);
+      GfMatrix4d xformMatrix(target.parent.GetInverse() * target.offset * _matrix);
 
       target.current.scale = target.previous.scale +
         GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]);
