@@ -234,7 +234,9 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
 void TestPBD::UpdateExec(UsdStageRefPtr& stage, float time)
 {
   _scene.Sync(stage, time);
+  std::cout << "text xpbd update..." << std::endl;
   _solver->Update(stage, time);
+  std::cout << "text xpbd update done!" << std::endl;
 }
 
 void TestPBD::TerminateExec(UsdStageRefPtr& stage)

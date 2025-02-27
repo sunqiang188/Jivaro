@@ -5,6 +5,7 @@
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec3d.h>
 #include <pxr/base/gf/vec4d.h>
+#include <pxr/base/gf/rotation.h>
 #include <pxr/base/gf/matrix4d.h>
 
 #include "../common.h"
@@ -58,6 +59,12 @@ public:
     const int* elements, size_t sz, const GfMatrix4d* m=NULL) const;
 
   virtual GfVec3f ComputeVelocity(const GfVec3f* positions, const GfVec3f* previous, 
+    const int* elements, size_t sz, const GfMatrix4d* m=NULL) const;
+
+  virtual GfVec3f ComputeInterpolatedPosition(const GfVec3f* positions, const GfVec3f* previous, float t,
+    const int* elements, size_t sz, const GfMatrix4d* m=NULL) const;
+
+  virtual GfVec3f ComputeInterpolatedNormal(const GfVec3f* normals, const GfVec3f* positions, const GfVec3f* previous, float t,
     const int* elements, size_t sz, const GfMatrix4d* m=NULL) const;
 
   template<typename T>

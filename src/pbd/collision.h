@@ -57,8 +57,8 @@ public:
   virtual void Update(const UsdPrim& prim, double time);
   virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft);
-  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n, float ft);
-  virtual void UpdateContacts(Particles* particles);
+  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n);
+  virtual void UpdateContacts(Particles* particles, float t);
 
   virtual void CreateContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints);
@@ -116,12 +116,12 @@ protected:
   virtual void _UpdateParameters(const UsdPrim& prim, double time);
   virtual void _ResetContacts(Particles* particles);
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
-    std::vector<Constraint*>& constraints, float dt);
+    std::vector<Constraint*>& constraints);
   virtual void _FindContacts(Particles* particles, size_t begin, size_t end, float ft);
   virtual void _UpdateContacts(Particles* particles, size_t begin, size_t end);
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
-  virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft){};
+  virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact);
 
   // hits encode vertex hit in the int list bits
   VtArray<int>                 _hits;
@@ -136,6 +136,7 @@ protected:
   float                             _stiffness;
   float                             _margin;
   float                             _maxSeparationVelocity;
+  float                             _t;
   Geometry*                         _collider;
   TfToken                           _key;
 
@@ -157,12 +158,13 @@ public:
 protected:
   void _UpdatePositionAndNormal();
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
 
 private:
-  static size_t                 TYPE_ID;
+  static size_t            TYPE_ID;
   GfVec3f                  _position;
   GfVec3f                  _normal;
+  GfVec3f                  _prevPosition;
+  GfVec3f                  _prevNormal;
 
 };
 
@@ -179,9 +181,7 @@ public:
   
 protected:
   void _UpdateSize();
-  void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
-  
+  void _FindContact(Particles* particles, size_t index, float ft) override;  
 
 private:
   static size_t                 TYPE_ID;
@@ -202,9 +202,7 @@ public:
   
 protected:
   void _UpdateCenterAndRadius();
-  void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
-  
+  void _FindContact(Particles* particles, size_t index, float ft) override;  
 
 private:
   static size_t                 TYPE_ID;
@@ -225,13 +223,11 @@ public:
   
 protected:
   void _UpdateRadiusAndHeight();
-  void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
-  
+  void _FindContact(Particles* particles, size_t index, float ft) override;  
 
 private:
   static size_t                 TYPE_ID;
-  GfVec3f                  _center;
+  GfVec3f                       _center;
   float                         _radius;
   float                         _height;
 };
@@ -263,9 +259,8 @@ public:
 protected:
   void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
-  void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int elem, Contact* contact, float ft) override;
-  
+  void _FindContact(Particles* particles, size_t index, float ft) override;  
+  void _StoreContactLocation(Particles* particles, int index, Contact* contact) override;
 
 private:
   static size_t                 TYPE_ID;
@@ -289,7 +284,7 @@ public:
   GfVec3f GetGradient(Particles* particles, size_t index, size_t other);
   GfVec3f GetVelocity(Particles* particles, size_t index, size_t other);
 
-  void UpdateContacts(Particles* particles) override;
+  void UpdateContacts(Particles* particles, float t) override;
 
   void Update(const UsdPrim& prim, double time) override;
 
@@ -304,10 +299,10 @@ protected:
   void _FindContacts(Particles* particles, size_t begin, size_t end, float ft) override;
   void _UpdateContacts(Particles* particles, size_t begin, size_t end) override;
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact, float ft);
+  void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact);
 
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
-    std::vector<Constraint*>& constraints, float ft)override;
+    std::vector<Constraint*>& constraints)override;
 
   inline bool _AreConnected(size_t lhs, size_t rhs);
 

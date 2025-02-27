@@ -18,8 +18,8 @@ public:
   Contact(){};
   virtual ~Contact(){};
 
-  void Init(const GfVec3f &normal, const GfVec3f &velocity, const float depth);
-  void Update(const GfVec3f &normal, const GfVec3f &velocity, const float depth);
+  void Init(Collision* collision, Particles* particles, size_t index);
+  void Update(Collision* collision, float t);
 
   void SetTouching(bool touching){_touching = touching;};
   bool IsTouching(){return _touching;};
@@ -28,9 +28,11 @@ public:
   float GetDepth() const {return _depth;};
   float GetInitDepth() const {return _initDepth;};
 
-private:
-  GfVec3f      _normal;   // contact normal
-  GfVec3f      _velocity; // relative velocity
+private:      
+  GfRotation        _rotationAlongFrame;
+  GfVec3f           _prevNormal;
+  GfVec3f           _normal;   // contact normal
+  GfVec3f           _velocity; // relative velocity
 
   float             _initDepth;// start frame penetration depth
   float             _depth;    // current substep penetration depth

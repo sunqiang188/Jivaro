@@ -379,6 +379,7 @@ void Solver::WeightBoundaries(Body* body)
 
 void Solver::_PrepareContacts()
 {
+  std::cout << "prepare contacts..." << std::endl;
   _timer->Start(0);
   for (auto& contact: _contacts)
     delete contact;
@@ -393,17 +394,19 @@ void Solver::_PrepareContacts()
 
   _particles.ResetCounter(_contacts, 1);
   _timer->Stop();
+
+  std::cout << "prepare contacts eneded..." << std::endl;
 }
 
 
 
-void Solver::_UpdateContacts()
+void Solver::_UpdateContacts(float t)
 {
   for (auto& collision : _collisions)
-    collision->UpdateContacts(&_particles);
+    collision->UpdateContacts(&_particles, t);
 
   if(_selfCollisions)
-    _selfCollisions->UpdateContacts(&_particles);
+    _selfCollisions->UpdateContacts(&_particles, t);
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
@@ -533,6 +536,7 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
 
 void Solver::Reset(UsdStageRefPtr& stage)
 {
+  std::cout << "RESET START.." << std::endl;
   UpdateInputs(stage, _startTime);
   UpdateParameters(stage, _startTime);
   UpdateCollisions(stage, _startTime);
@@ -584,15 +588,19 @@ void Solver::Reset(UsdStageRefPtr& stage)
     collision->Reset();
 
   UpdateConstraintsDisplay();
+
+  std::cout << "RESET END.." << std::endl;
 }
 
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
+  std::cout << "STEP XPBD SOLVER..." << std::endl;
   UpdateInputs(stage, time);
   UpdateParameters(stage, time);
   UpdateCollisions(stage, time);
 
   const size_t numParticles = _particles.GetNumParticles();
+  const float stepTime = 1.f / static_cast<float>(_subSteps - 1);
   if (!numParticles)return;
 
   size_t numThreads = WorkGetConcurrencyLimit();
@@ -601,7 +609,6 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
 
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
-
     _SolveVelocities(_contacts);
 
     _timer->Start(1);
@@ -616,7 +623,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
     _SolveConstraints(_constraints);
 
     _timer->Next();
-     _UpdateContacts();
+     _UpdateContacts(si * stepTime);
 
     // solve and apply contacts
     _timer->Next();

@@ -8,19 +8,77 @@
 
 JVR_NAMESPACE_OPEN_SCOPE
 
-void Contact::Init(const GfVec3f &normal, const GfVec3f &velocity, const float depth)
+void Contact::Init(Collision* collision, Particles* particles, size_t index)
 {
-  _normal = normal;
-  _velocity = velocity;
-  _initDepth = depth;
-  if(_initDepth > 0.f) _initDepth = 0.f;
+  _normal = collision->GetGradient(particles, index);
+  _initDepth = collision->GetValue(particles, index);
+  _depth = _initDepth;
+  _velocity = GfVec3f(0.f);
+  _rotationAlongFrame = GfRotation();
+
+/*
+  Geometry* geometry = collision->GetGeometry();
+  switch(geometry->GetType()) {
+    case Collision::PLANE:
+    {
+      Plane* plane = (Plane*)geometry;
+      const GfVec3f position = plane->GetOrigin();
+      _normal = plane->GetNormal();
+      _initDepth = GfDot(_normal, point - position)  - radius;
+      _depth = _initDepth;
+    }
+    case Geometry::BOX:
+    {
+      Cube* cube = (Cube*)geometry;
+
+      const GfVec3d scale = _collider->GetScale();
+      const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
+      
+      const GfVec3f local(_collider->GetInverseMatrix().Transform(point));
+      
+      const GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
+
+      _normal = (point - closest).GetNormalized();
+      _initDepth = cube->SignedDistance(predicted) - radius / scaleFactor;
+      _depth = _initDepth;
+      
+    }
+    case Geometry::MESH:
+    {
+      Mesh* mesh = (Mesh*)geometry;
+      const GfVec3f* positions = mesh->GetPositionsCPtr();
+      const GfVec3f* previous = mesh->GetPreviousCPtr();
+      const GfVec3f* normals = mesh->GetNormalsCPtr();
+
+      const Triangle* triangle = mesh->GetTriangle(GetComponentIndex());
+
+      const GfVec3f position = ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
+      const GfVec3f next = ComputePredictedPosition(positions, previous, 1.f, &triangle->vertices[0], 3, &mesh->GetMatrix());
+
+      _prevNormal = ComputeInterpolatedNormal(normals, positions, previous, 0.f, &triangle->vertices[0], 3, &mesh->GetMatrix());
+      _normal = ComputeInterpolatedNormal(normals, positions, previous, 1.f, &triangle->vertices[0], 3, &mesh->GetMatrix());
+
+      _rotationAlongFrame = GfRotation(_prevNormal,  _normal);
+
+      _normal = _prevNormal;
+
+      _initDepth = GfDot(point - position, _normal)  - radius;
+      
+      const GfVec3f intersection = position + _normal * _initDepth;
+
+      SetPoint(intersection);
+      SetDistance(_initDepth);
+      _velocity = mesh->GetTriangleVelocity(GetComponentIndex());
+    }
+  }
+*/
+  _touching = _depth <= 0.0;
+  
 }
 
-void Contact::Update(const GfVec3f &normal, const GfVec3f &velocity, const float depth)
+void Contact::Update(Collision* collision, float t)
 {
-  _normal = normal;
-  _velocity = velocity;
-  _depth = depth;
+
 }
 
 

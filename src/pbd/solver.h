@@ -124,7 +124,7 @@ public:
 
 private:
   void _PrepareContacts();
-  void _UpdateContacts();
+  void _UpdateContacts(float t);
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);
   void _SolveVelocities(std::vector<Constraint*>& constraints);
