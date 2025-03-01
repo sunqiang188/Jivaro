@@ -989,7 +989,6 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 {
-
   _ResetCorrection(); 
   const size_t numElements = _elements.size();
 
@@ -1005,9 +1004,11 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
     const GfVec3f normalVelocity = GfDot(position - previous, normal) * normal;
     const GfVec3f tangentVelocity = (position - previous) - normalVelocity;
 
-   _correction[elem] += -particles->velocity[index] * 0.1f + 
-       (-_collision->GetRestitution() * normalVelocity + (1.f - _collision->GetFriction()) * tangentVelocity + 
-       _collision->GetContactVelocity(index)) * dt;
+   _correction[elem] += _collision->GetContactVelocity(index);
+   /*
+      (-_collision->GetRestitution() * normalVelocity + (1.f - _collision->GetFriction()) * tangentVelocity) * dt +
+      _collision->GetContactVelocity(index);
+    */
 
     _collision->SetContactTouching(index, true);
   }

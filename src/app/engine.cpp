@@ -265,12 +265,12 @@ Engine::_PrepareDefaultLighting()
   const float t = Time::Get()->GetActiveTime();
 
   for (size_t i = 0; i < 3; ++i) {
-    const GfVec3d lightPos(GfSin(i + (t *0.1)) * 20.f, 20.f, GfCos(i + (t *0.1))*20.f);
+    const GfVec3d lightPos(GfSin(static_cast<float>(i) /*+ (t *0.1)*/) * 20.f, 20.f, GfCos(static_cast<float>(i) /*+ (t *0.1)*/)*20.f);
     const pxr::GfVec3f direction(-lightPos.GetNormalized());
 
     SdfPath defaultLightId = _taskController->GetControllerId().AppendChild(TfToken("light" +std::to_string(i)));
     _lights[i].SetID(defaultLightId);
-    _lights[i].SetAmbient(GfVec4f(GfSin(i + (t *0.1)),0.5f,GfCos(i + (t *0.1)), 0));
+    _lights[i].SetAmbient(GfVec4f(0.5f,0.5f,0.5f, 0));
     _lights[i].SetPosition(GfVec4f(lightPos[0], lightPos[1], lightPos[2], 1));
     _lights[i].SetSpotDirection(direction);
     _lights[i].SetIsDomeLight(false);

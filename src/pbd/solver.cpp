@@ -324,7 +324,6 @@ void Solver::UpdateConstraintsDisplay()
   VtArray<float> widths;
   VtArray<GfVec3f> colors;
   VtArray<int> counts;
-
   
   for(size_t c = 0; c < numConstraints; ++c) {
     if(_constraints[c]->GetTypeId() == Constraint::ATTACH) continue;
@@ -333,13 +332,7 @@ void Solver::UpdateConstraintsDisplay()
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
       counts.push_back(2);
   }
-  /*
- size_t numCollisions = _collisions.size();
-  for(size_t c = 0; c < numCollisions; ++c) {
-    if(_collisions[c]->GetTypeId() != Collision::MESH) continue;
-    _collisions[c]->GetNormals(&_particles, positions, widths, colors, counts);
-    _c
-    */
+
   _curves->SetTopology(positions, widths, counts);
   _curves->SetColors(colors);
 
@@ -536,7 +529,6 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
 
 void Solver::Reset(UsdStageRefPtr& stage)
 {
-  std::cout << "RESET START.." << std::endl;
   UpdateInputs(stage, _startTime);
   UpdateParameters(stage, _startTime);
   UpdateCollisions(stage, _startTime);
@@ -588,13 +580,10 @@ void Solver::Reset(UsdStageRefPtr& stage)
     collision->Reset();
 
   UpdateConstraintsDisplay();
-
-  std::cout << "RESET END.." << std::endl;
 }
 
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
-  std::cout << "STEP XPBD SOLVER..." << std::endl;
   UpdateInputs(stage, time);
   UpdateParameters(stage, time);
   UpdateCollisions(stage, time);

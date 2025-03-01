@@ -13,7 +13,10 @@ void Contact::Init(Collision* collision, Particles* particles, size_t index)
   _normal = collision->GetGradient(particles, index);
   _initDepth = collision->GetValue(particles, index);
   _depth = _initDepth;
-  _velocity = GfVec3f(0.f);
+  if(collision->GetTypeId() != Collision::SELF) 
+    _velocity = collision->GetVelocity(particles, index);
+  else
+    _velocity = ((SelfCollision*)collision)->GetVelocity(particles, index, GetComponentIndex());
   _rotationAlongFrame = GfRotation();
 
 /*
@@ -76,8 +79,14 @@ void Contact::Init(Collision* collision, Particles* particles, size_t index)
   
 }
 
-void Contact::Update(Collision* collision, float t)
+void Contact::Update(Collision* collision, Particles* particles, size_t index)
 {
+  _normal = collision->GetGradient(particles, index);
+  _depth = collision->GetValue(particles, index);
+  /*
+  if(collision->GetTypeId() != Collision::SELF) 
+    _velocity = collision->GetVelocity(particles, index);
+    */
 
 }
 

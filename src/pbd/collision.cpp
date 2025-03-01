@@ -88,7 +88,7 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
     if(_contacts.IsUsed(index)) {
       Contact* contact = _contacts.Get(index);
-      contact->Update(this, _t);
+      contact->Update(this, particles, index);
     }
 }
 
@@ -113,7 +113,6 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
     const size_t index = elements[elemIdx];
     _StoreContactLocation(particles, index, _contacts.Use(index));
-    
   }
 }
 
@@ -381,14 +380,14 @@ PlaneCollision::PlaneCollision(Geometry* collider, const SdfPath& path,
 float PlaneCollision::GetValue(Particles* particles, size_t index)
 {
   GfVec3f position = _prevPosition * (1.f - _t) + _position * _t;
-  GfVec3f normal = _prevNormal * (1.f - _t) + _normal * _t;
+  GfVec3f normal = GfSlerp(_t, _prevNormal, _normal);
 
   return GfDot(normal, particles->predicted[index] - position) -(particles->radius[index]);
 }
 
 GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
 {
-  return _prevNormal * (1.f - _t) + _normal * _t;
+  return GfSlerp(_t, _prevNormal, _normal);
 }
 
 void PlaneCollision::Update(const UsdPrim& prim, double time) 
@@ -915,7 +914,7 @@ void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t e
         Contact* contact = _contacts.Get(index, c);
         size_t other = contact->GetComponentIndex();
 
-        contact->Update(this, _t);
+        contact->Update(this, particles, index);
         /*
         if (index % 32 == 0) {
           particles->color[index] = color;

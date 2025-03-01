@@ -19,7 +19,7 @@ public:
   virtual ~Contact(){};
 
   void Init(Collision* collision, Particles* particles, size_t index);
-  void Update(Collision* collision, float t);
+  void Update(Collision* collision, Particles* particles, size_t index);
 
   void SetTouching(bool touching){_touching = touching;};
   bool IsTouching(){return _touching;};

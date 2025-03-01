@@ -71,7 +71,7 @@ Triangle::GetVelocity(const GfVec3f* positions, const GfVec3f* previous) const
   const GfVec3f curNormal = GetNormal(positions);
 
   const GfVec3f deltaP(curPos - prevPos);
-  GfVec3f velocity = GfVec3f(deltaP / Geometry::FrameDuration);
+  GfVec3f velocity = GfVec3f(deltaP) / Geometry::FrameDuration;
 
   const GfQuatf deltaR = GetRotationBetweenVectors(prevNormal, curNormal);
   
