@@ -257,13 +257,12 @@ ExecSceneIndex::UpdateExec()
   for(auto& prim: scene->GetPrims()) {
     if(prim.second.geom->GetType() == Geometry::MESH) {
       HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
-        entries.push_back({prim.first, locator});
+      entries.push_back({prim.first, locator});
     } else if(prim.second.geom->GetType() == Geometry::POINT) {
       HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
-        entries.push_back({prim.first, locator});
+      entries.push_back({prim.first, locator});
     } else if(prim.second.geom->GetType() == Geometry::CURVE) {
-      HdDataSourceLocator locator(HdPrimvarsSchemaTokens->primvars);
-        entries.push_back({prim.first, locator});
+      entries.push_back({prim.first, HdBasisCurvesTopologySchema::GetDefaultLocator()});
     }
   }
   _SendPrimsDirtied(entries);
@@ -271,6 +270,7 @@ ExecSceneIndex::UpdateExec()
 
 HdSceneIndexPrim ExecSceneIndex::GetPrim(const SdfPath &primPath) const
 {
+
   if (primPath == _gridPath) return _gridPrim;
   if(_exec) {    
     Scene::_Prim* prim = _exec->GetScene()->GetPrim(primPath);

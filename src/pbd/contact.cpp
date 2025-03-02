@@ -83,10 +83,11 @@ void Contact::Update(Collision* collision, Particles* particles, size_t index)
 {
   _normal = collision->GetGradient(particles, index);
   _depth = collision->GetValue(particles, index);
+
   /*
   if(collision->GetTypeId() != Collision::SELF) 
-    _velocity = collision->GetVelocity(particles, index);
-    */
+    _velocity = collision->GetVelocity(particles, index);*/
+    
 
 }
 

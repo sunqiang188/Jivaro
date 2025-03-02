@@ -81,7 +81,9 @@ TestHair::_HairEmit(UsdStageRefPtr& stage, Curve* curve, UsdGeomMesh& mesh,
   //uint64_t T3 = CurrentTime() - T;
   //T = CurrentTime();
   //PoissonSampling(_radius, _density, positions, normals, triangles, samples);
+  std::cout << "denjity : " << _density << std::endl;
   StochasticSampling(_density, positions, normals, triangles, samples);
+  std::cout << "found samples : " << samples.size() << std::endl;
   //uint64_t T4 = CurrentTime() - T;
   //T = CurrentTime();  
 
@@ -123,6 +125,7 @@ TestHair::_HairEmit(UsdStageRefPtr& stage, Curve* curve, UsdGeomMesh& mesh,
   //uint64_t T5 = CurrentTime() - T; 
   //T = CurrentTime();
 
+  std::cout << "num sub curves : " << cvCounts.size() << std::endl;
   curve->SetTopology(points, radii, cvCounts);
   curve->SetColors(colors);
 

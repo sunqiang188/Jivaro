@@ -123,6 +123,7 @@ public:
   const _ElementMap& GetElements(){return _elements;};
 
 private:
+  void _ResetContacts();
   void _PrepareContacts();
   void _UpdateContacts(float t);
 

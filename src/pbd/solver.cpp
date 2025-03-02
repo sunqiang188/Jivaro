@@ -325,11 +325,23 @@ void Solver::UpdateConstraintsDisplay()
   VtArray<GfVec3f> colors;
   VtArray<int> counts;
   
+  /*
   for(size_t c = 0; c < numConstraints; ++c) {
     if(_constraints[c]->GetTypeId() == Constraint::ATTACH) continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
+      counts.push_back(2);
+  }
+  */
+
+ size_t numContacts = _contacts.size();
+
+  for(size_t c = 0; c < numContacts; ++c) {
+    if(((CollisionConstraint*)_contacts[c])->GetCollision()->GetTypeId() == Collision::SELF)continue;
+    _contacts[c]->GetPoints(&_particles, positions, widths, colors);
+
+    for(size_t d = 0; d < _contacts[c]->GetNumElements(); ++d)
       counts.push_back(2);
   }
 
@@ -370,9 +382,16 @@ void Solver::WeightBoundaries(Body* body)
   }
 }
 
+void Solver::_ResetContacts()
+{
+  for (auto& contact: _contacts)
+    delete contact;
+
+  _contacts.clear();
+}
+
 void Solver::_PrepareContacts()
 {
-  std::cout << "prepare contacts..." << std::endl;
   _timer->Start(0);
   for (auto& contact: _contacts)
     delete contact;
@@ -387,8 +406,6 @@ void Solver::_PrepareContacts()
 
   _particles.ResetCounter(_contacts, 1);
   _timer->Stop();
-
-  std::cout << "prepare contacts eneded..." << std::endl;
 }
 
 
@@ -534,6 +551,7 @@ void Solver::Reset(UsdStageRefPtr& stage)
   UpdateCollisions(stage, _startTime);
 
   // reset
+  _ResetContacts();
   _particles.RemoveAllBodies();
 
   for (size_t b = 0; b < _bodies.size(); ++b) {
@@ -579,7 +597,6 @@ void Solver::Reset(UsdStageRefPtr& stage)
   for(auto& collision: _collisions)
     collision->Reset();
 
-  UpdateConstraintsDisplay();
 }
 
 void Solver::Step(UsdStageRefPtr& stage, float time)

@@ -695,8 +695,7 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
       _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 
     const GfVec3f delta = predicted - position;
-    SetHit(index, (delta.GetLength() < particles->radius[index]) ||
-      (GfDot(delta.GetNormalized(), normal) < _margin));
+    SetHit(index, (delta.GetLength() < particles->radius[index]) || (GfDot(delta, normal) < _margin));
   }
     
   else
