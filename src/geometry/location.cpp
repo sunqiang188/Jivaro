@@ -94,11 +94,11 @@ Location::ComputeInterpolatedNormal(const GfVec3f* normals, const GfVec3f* posit
     GfVec3f normal = normals[elements[0]] * _coords[0] + normals[elements[1]] * _coords[1] + normals[elements[2]] * _coords[2];
     GfVec3f prevNormal(rotation.TransformDir(normal.GetNormalized()));
 
-    result = GfSlerp(t, prevNormal, normal).GetNormalized();
+    result = GfSlerp(t, prevNormal, normal);
   }
   
-  if(m)return GfVec3f(m->Transform(result));
-  else return result;
+  if(m)return GfVec3f(m->TransformDir(result).GetNormalized());
+  else return result.GetNormalized();
 }
 
 

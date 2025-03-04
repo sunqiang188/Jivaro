@@ -72,6 +72,7 @@ public:
   virtual float GetContactDepth(size_t index, size_t c=0) const;
   virtual float GetContactInitDepth(size_t index, size_t c=0) const;
   virtual float GetMaxSeparationVelocity() const {return _maxSeparationVelocity;};
+  virtual float GetStepTime() const {return _t;};
 
   virtual void SetContactTouching(size_t index, bool touching, size_t c=0);
   virtual bool IsContactTouching(size_t index, size_t c=0) const;
@@ -80,6 +81,8 @@ public:
   size_t GetNumContacts(size_t index){return _contacts.GetNumUsed(index);};
   size_t GetTotalNumContacts(){return _contacts.GetTotalNumUsed();};
   const std::vector<int>& GetC2P(){return _c2p;};
+
+  virtual bool Compute(Particles* particles, size_t index, Contact& contact){return false;};
 
   virtual float GetValue(Particles* particles, size_t index) = 0;
   virtual GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
@@ -148,6 +151,8 @@ public:
   PlaneCollision(Geometry* collider, const SdfPath& path, 
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
+
+  virtual bool Compute(Particles* particles, size_t index, Contact& contact);
 
   float GetValue(Particles* particles, size_t index) override;
   GfVec3f GetGradient(Particles* particles, size_t index) override;

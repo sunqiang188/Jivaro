@@ -243,6 +243,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
         _solver->AddElement(collision, _colliders[c], _collidersId[c]);
       
     }
+
   }
 
   bool createGroundCollision = true;

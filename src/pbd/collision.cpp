@@ -201,6 +201,7 @@ Collision::CreateContactConstraints(Particles* particles, const std::vector<Body
           //const GfVec3f velocity = mesh->GetTriangleVelocity(contact->GetComponentIndex());
           //particles->position[p] = desired;
           //particles->predicted[p] = desired;
+          contact->Update(this, particles, index);
           elements.push_back(index);
           contacts.push_back(contact);
           particles->color[index] = GfVec3f(1.f, 0.f, 0.f);
@@ -377,6 +378,15 @@ PlaneCollision::PlaneCollision(Geometry* collider, const SdfPath& path,
   _UpdatePositionAndNormal();
 }
 
+bool PlaneCollision::Compute(Particles* particles, size_t index, Contact& contact)
+{
+  contact.SetPoint(_prevPosition * (1.f - _t) + _position * _t);
+  contact.SetNormal(GfSlerp(_t, _prevNormal, _normal));
+  contact.SetDistance(GfDot(_normal, particles->predicted[index] - _position) -(particles->radius[index]));
+
+  return contact.GetDistance() < _margin;
+}
+
 float PlaneCollision::GetValue(Particles* particles, size_t index)
 {
   GfVec3f position = _prevPosition * (1.f - _t) + _position * _t;
@@ -413,7 +423,7 @@ void PlaneCollision::_UpdatePositionAndNormal()
 
 void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
-  const GfVec3f predicted(particles->position[index] + particles->velocity[index] * ft);
+  const GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
   float d = GfDot(_normal, predicted - _position)  - (particles->radius[index] + _margin);
   SetHit(index, d < 0.f);
 }
@@ -469,7 +479,7 @@ GfVec3f _PointOnBox(const GfVec3f& local, double size, const GfMatrix4d& m)
 void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const GfVec3f velocity = particles->velocity[index] * ft;
-  const GfVec3f predicted(particles->position[index] + velocity);
+  const GfVec3f predicted(particles->predicted[index] + velocity);
   Cube* cube = (Cube*) _collider;
 
   const GfVec3d scale = _collider->GetScale();
@@ -526,7 +536,7 @@ void SphereCollision::_UpdateCenterAndRadius()
 void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const GfVec3f velocity = particles->velocity[index] * ft;
-  GfVec3f predicted(_collider->GetInverseMatrix().Transform(particles->position[index] + velocity));
+  GfVec3f predicted(_collider->GetInverseMatrix().Transform(particles->predicted[index] + velocity));
   SetHit(index, predicted.GetLength() - particles->radius[index] < _radius);
 }
 
@@ -595,7 +605,7 @@ static GfVec3f _PointOnCapsuleSegment(const GfVec3f &p,
 void CapsuleCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   Capsule* capsule = (Capsule*)_collider;
-  GfVec3f predicted(particles->position[index] + particles->velocity[index] * ft);
+  GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
 
   const GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
@@ -695,7 +705,7 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
       _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 
     const GfVec3f delta = predicted - position;
-    SetHit(index, (delta.GetLength() < particles->radius[index]) || (GfDot(delta, normal) < _margin));
+    SetHit(index, (delta.GetLength() - particles->radius[index]) < _margin);
   }
     
   else
@@ -732,7 +742,7 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
   const GfVec3f* previous = mesh->GetPreviousCPtr();
   const GfVec3f* normals = mesh->GetNormalsCPtr();
   const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
-
+  
   return _closest[index].ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &mesh->GetMatrix());
 }
 

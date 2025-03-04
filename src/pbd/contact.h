@@ -28,6 +28,10 @@ public:
   float GetDepth() const {return _depth;};
   float GetInitDepth() const {return _initDepth;};
 
+  void SetNormal(const GfVec3f& normal){_normal = normal;};
+  void SetDepth(float depth){_depth = depth;};
+  void SetInitDepth(float depth){_initDepth = depth;};
+
 private:      
   GfRotation        _rotationAlongFrame;
   GfVec3f           _prevNormal;

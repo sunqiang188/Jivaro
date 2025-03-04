@@ -309,6 +309,7 @@ public:
     VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
 
   void SolvePosition(Particles* particles, float dt) override;
+  void SolveVelocity(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 
