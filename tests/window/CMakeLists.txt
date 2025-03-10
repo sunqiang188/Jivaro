@@ -46,7 +46,7 @@ target_include_directories(${TARGET}
 
 )
 
-if(PYTHON_BUILD)
+if(ENABLE_PYTHON_SUPPORT)
   target_include_directories(${TARGET}  PUBLIC ${Python3_INCLUDE_DIRS})
 endif()
 
@@ -61,7 +61,7 @@ target_link_libraries(${TARGET}
   
 )
 
-if(PYTHON_BUILD)
+if(ENABLE_PYTHON_SUPPORT)
   target_link_libraries(${TARGET} ${Python3_LIBRARIES})
 endif()
 

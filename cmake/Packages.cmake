@@ -31,7 +31,7 @@ endif()
 include(${USD_DIR}/pxrConfig.cmake)
 
 # python
-if(PYTHON_BUILD)
+if(ENABLE_PYTHON_SUPPORT)
   find_package(Python3 COMPONENTS Development)
 endif()
 

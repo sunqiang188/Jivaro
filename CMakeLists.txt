@@ -126,7 +126,7 @@ list(APPEND USD_LIB_NAMES
   pxOsd
 )
 
-if(PYTHON_BUILD)
+if(ENABLE_PYTHON_SUPPORT)
   list(APPEND USD_LIB_NAMES python)
 endif()
 
@@ -145,7 +145,7 @@ endif()
 endforeach()
 
 # python
-if(PYTHON_BUILD)
+if(ENABLE_PYTHON_SUPPORT)
   find_package(Python3 COMPONENTS Development)
 endif()
 

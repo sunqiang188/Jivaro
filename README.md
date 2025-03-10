@@ -26,7 +26,7 @@ Jivaro is develloped and tested on Windows (Windows 10 Pro) and on MacBookPro M1
 3. clone Jivaro repository
 4. create a build folder inside Jivaro folder
 5. from this build repo run
-    - cmake -DUSD_DIR=path_to_usd_build -DGLFW_DIR=path_to_glfw_build -DPYTHON_BUILD=ON -DCMAKE_INSTALL_PREFIX=path_to_jivaro_install ../
+    - cmake -DUSD_DIR=path_to_usd_build -DGLFW_DIR=path_to_glfw_build -DENABLE_PYTHON_SUPPORT=ON -DCMAKE_INSTALL_PREFIX=path_to_jivaro_install ../
     - cmake --build . --config Release
     - cmake --install .
 6. update your system PATHS
