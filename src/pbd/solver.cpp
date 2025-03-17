@@ -387,23 +387,17 @@ void Solver::_ResetContacts()
   for (auto& contact: _contacts)
     delete contact;
 
-  for(auto& contact: _lastContacts)
-    delete contact;
-
   _contacts.clear();
-  _lastContacts.clear();
 }
 
 void Solver::_PrepareContacts()
 {
   _timer->Start(0);
-  for (auto& contact: _contacts)
-    delete contact;
-
-  _contacts.clear();
+  _ResetContacts();
 
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+
 
   if(_selfCollisions)
     _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
@@ -413,7 +407,7 @@ void Solver::_PrepareContacts()
 }
 
 
-
+/*
 void Solver::_UpdateContacts(float t)
 {
   for (auto& collision : _collisions)
@@ -422,20 +416,7 @@ void Solver::_UpdateContacts(float t)
   if(_selfCollisions)
     _selfCollisions->UpdateContacts(&_particles, t);
 }
-
-void Solver::_StoreLastContacts()
-{
-  for(auto& contact: _lastContacts)
-    delete contact;
-  _lastContacts.clear();
-
-  for(Constraint* constraint: _contacts)
-  {
-    CollisionConstraint* collisionConstraint = (CollisionConstraint*)constraint;
-    Collision*  collision = collisionConstraint->GetCollision();
-    collision->CreateContactConstraints(&_particles, _bodies, _lastContacts);
-  }
-}
+*/
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
@@ -526,7 +507,6 @@ Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
 void 
 Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
 {
-
   // solve velocities
   WorkParallelForEach(constraints.begin(), constraints.end(),
     [&](Constraint* constraint) {
@@ -539,6 +519,20 @@ Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
     if(constraint->IsActive())
       constraint->ApplyVelocity(&_particles);
 
+}
+
+void 
+Solver::_SolveCollisions()
+{
+  for(size_t index = 0; index < _particles.GetNumParticles(); ++index) {
+    for(Collision* collision: _collisions) {
+      if(!collision->CheckHit(index))continue;
+      float d = collision->GetValue(&_particles, index);
+      if(d > 0.f) continue;
+      GfVec3f gradient = collision->GetGradient(&_particles, index);
+      _particles.predicted[index] += -d * gradient;
+    }
+  }
 }
 
 
@@ -617,8 +611,6 @@ void Solver::Reset(UsdStageRefPtr& stage)
 
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
-  _StoreLastContacts();
-
   UpdateInputs(stage, time);
   UpdateParameters(stage, time);
   UpdateCollisions(stage, time);
@@ -630,13 +622,10 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   size_t numThreads = WorkGetConcurrencyLimit();
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
-  
-  _SolveConstraints(_lastContacts);
-  _SolveVelocities(_lastContacts);
 
   _PrepareContacts();
   for(size_t si = 0; si < _subSteps; ++si) {
-    _UpdateContacts(si * stepTime);
+    //_UpdateContacts(si * stepTime);
 
     _timer->Start(1);
     // integrate particles
@@ -651,9 +640,9 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
 
     // solve and apply contacts
     _timer->Next();
-    _SolveConstraints(_contacts);
-  
+    _SolveCollisions();
 
+  
     _timer->Next();
 
     // update particles
@@ -663,8 +652,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
         std::placeholders::_1, std::placeholders::_2), packetSize);
     _timer->Stop();
 
-    _SolveVelocities(_contacts);
-     _SolveVelocities(_lastContacts);
+    //_SolveVelocities(_contacts);
 
   }
   

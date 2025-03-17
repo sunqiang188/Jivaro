@@ -6,7 +6,7 @@
 #include <pxr/usd/usd/attribute.h>
 
 #include "../common.h"
-#include "../pbd/mask.h"
+#include "../pbd/element.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -15,12 +15,12 @@ class Geometry;
 struct Particles;
 struct Body;
 
-class Force : public Mask
+class Force : public Element
 {
 public:
   enum Type { GRAVITY, DAMP, NOISE, WAVE};
 
-  Force() : Mask(Element::FORCE) {};
+  Force() :Element(Element::FORCE) {};
   virtual ~Force() {};
   
   void AddBody(Particles* particles, Body* body);

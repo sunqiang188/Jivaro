@@ -14,7 +14,6 @@
 #include "../pbd/element.h"
 #include "../pbd/particle.h"
 #include "../pbd/collision.h"
-#include "../pbd/mask.h"
 #include "../geometry/location.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -296,31 +295,6 @@ protected:
 
 };
 
-class ContactConstraint : public Constraint
-{
-public:
-  ContactConstraint(Body* body, const VtArray<int>& elems, Collision* collision, 
-    const VtArray<Contact*>& contact, float stiffness=0.f, float damping=0.f);
-
-  size_t GetTypeId() const override { return TYPE_ID; };
-  size_t GetElementSize() const override { return ELEM_SIZE; };
-
-  void GetPoints(Particles* particles, VtArray<GfVec3f>& results,
-    VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
-
-  void SolvePosition(Particles* particles, float dt) override;
-  void SolveVelocity(Particles* particles, float dt) override;
-
-  static size_t                 ELEM_SIZE;
-
-protected:
-  static size_t                 TYPE_ID;
-  VtArray<Contact>              _contacts;
-  Collision*                    _collision;
-};
-
-ConstraintsGroup* CreateContactConstraints(Body* body, Collision* collision, float stiffness=0.f, float damping=1.f,
-  const VtArray<int> *elements=nullptr);
 
 JVR_NAMESPACE_CLOSE_SCOPE
 
