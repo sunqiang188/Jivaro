@@ -58,6 +58,7 @@ public:
     std::vector<Constraint*>& constraints, float ft);
 
   virtual Geometry* GetGeometry(){return _collider;};
+  virtual void SetTime(float time){_t = time;};
 
   //virtual bool Compute(Particles* particles, size_t index, Contact& contact){return false;};
 
@@ -65,11 +66,18 @@ public:
   virtual GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
   virtual GfVec3f GetVelocity(Particles* particles, size_t index);
 
-  inline bool CheckHit(size_t index) {
-    return _hits[index];
+  inline bool CheckHit(size_t index) const {
+    return _hits[index] > 0;
   };
   inline void SetHit(size_t index, bool hit) {
-    _hits[index] = hit;
+    _hits[index] = (int)hit;
+  };
+
+  inline bool CheckCorrected(size_t index) {
+    return _corrected[index];
+  };
+  inline void SetCorrected(size_t index, bool corrected) {
+    _corrected[index] = corrected;
   };
 
   float GetFriction() const {return _friction;};
@@ -78,7 +86,7 @@ public:
   float GetMargin()const {return _margin;};
   float GetStiffness() const {return _stiffness;};
 
-  void Reset();
+  void Reset(Particles* particles);
 
   // for visual debugging
   virtual void GetPoints(Particles* particles, VtArray<GfVec3f>& points,
@@ -108,7 +116,9 @@ protected:
   */
 
   // hits encode vertex hit in the int list bits
-  VtArray<bool>                     _hits;
+  std::vector<int>                  _hits;
+  std::vector<int>                  _corrected;
+  VtArray<GfVec3f>                  _correction;
   //std::vector<int>                  _c2p;
   size_t                            _numParticles;
   //Contacts                          _contacts;
@@ -138,8 +148,6 @@ public:
   float GetValue(Particles* particles, size_t index) override;
   GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const UsdPrim& prim, double time) override;
-
-  //void UpdateContacts(Particles* particles) override;
 
 protected:
   void _UpdatePositionAndNormal();
@@ -269,8 +277,6 @@ public:
   float GetValue(Particles* particles, size_t index, size_t other);;
   GfVec3f GetGradient(Particles* particles, size_t index, size_t other);
   GfVec3f GetVelocity(Particles* particles, size_t index, size_t other);
-
-  //void UpdateContacts(Particles* particles, float t) override;
 
   void Update(const UsdPrim& prim, double time) override;
 

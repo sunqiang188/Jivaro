@@ -22,8 +22,10 @@ const size_t Collision::PACKET_SIZE = 64;
 const float Collision::TOLERANCE_MARGIN = 0.01f;
 
 
-void Collision::Reset()
+void Collision::Reset(Particles* particles)
 {
+  Init(particles->GetNumParticles());
+  _ResetContacts(particles);
   //_contacts.ResetAllUsed();
 }
 
@@ -78,16 +80,8 @@ void Collision::GetVelocities(Particles* particles, VtArray<GfVec3f>& points,
 // 
 // Contacts
 //
-/*
-void Collision::UpdateContacts(Particles* particles, float t)
-{
-  _t = t;
-  WorkParallelForN(
-      particles->GetNumParticles(),
-      std::bind(&Collision::_UpdateContacts, this, particles, 
-        std::placeholders::_1, std::placeholders::_2), PACKET_SIZE);
-}
 
+/*
 void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
@@ -111,7 +105,7 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
     std::bind(&Collision::_FindContacts, this, particles,
       std::placeholders::_1, std::placeholders::_2, ft), PACKET_SIZE);
       
-  //_BuildContacts(particles, bodies, constraints);
+  _BuildContacts(particles, bodies, constraints);
   
 }
 
@@ -131,7 +125,11 @@ void Collision::_ResetContacts(Particles* particles)
 {
   const size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles);
-  memset(&_hits[0], 0, _hits.size() * sizeof(bool));
+  memset(&_hits[0], 0, _hits.size() * sizeof(int));
+  _corrected.resize(numParticles);
+  memset(&_corrected[0], 0, _corrected.size() * sizeof(int));
+  _correction.resize(numParticles);
+  memset(&_correction[0], 0, _correction.size() * sizeof(GfVec3f));
 
   /*
   _c2p.clear();
@@ -146,24 +144,19 @@ void Collision::_ResetContacts(Particles* particles)
 void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints)
 {
-  CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
-  size_t numBodies = bodies.size();
 
   VtArray<int> elements;
-  Body* currentBody = nullptr;
+  Body* currentBody = particles->body[0];
 
-  size_t particleToContactIdx = 0;
   for (size_t index = 0; index < numParticles; ++index) {
     if (CheckHit(index)) {
       //_c2p.push_back(index);
       if (particles->body[index] != currentBody || elements.size() >= Constraint::BlockSize) {
-        if (elements.size()) {
-          constraint = new CollisionConstraint(currentBody, this, elements, _stiffness, _damp);
-          //StoreContactsLocation(particles, & elements[0], elements.size());
-          constraints.push_back(constraint);
-          elements.clear();
-        }
+        CollisionConstraint* constraint = new CollisionConstraint(currentBody, this, elements, _stiffness, _damp);
+        //StoreContactsLocation(particles, & elements[0], elements.size());
+        constraints.push_back(constraint);
+        elements.clear();
         currentBody = particles->body[index];
       } 
       elements.push_back(index);
@@ -171,7 +164,7 @@ void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& b
   } 
   
   if (elements.size()) {
-    constraint = new CollisionConstraint(currentBody, this, elements);
+    CollisionConstraint* constraint = new CollisionConstraint(currentBody, this, elements, _stiffness, _damp);
     //StoreContactsLocation(particles, & elements[0], elements.size());
     constraints.push_back(constraint);
   }
@@ -623,10 +616,12 @@ MeshCollision::GetValue(Particles* particles, size_t index)
   const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
 
   const GfVec3f position = 
+    //_closest[index].ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
     _closest[index].ComputeInterpolatedPosition(positions, previous, _t, &triangle->vertices[0], 3, &mesh->GetMatrix());
 
   const GfVec3f normal = 
     _closest[index].ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &mesh->GetMatrix());
+    //_closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 
   return GfDot(particles->predicted[index] - position, normal)  - particles->radius[index];
 
@@ -643,6 +638,7 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
   const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
   
   return _closest[index].ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &mesh->GetMatrix());
+  //return _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 }
 
 
@@ -801,15 +797,6 @@ void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>&
 }
 
 /*
-void SelfCollision::UpdateContacts(Particles* particles, float t)
-{
-  _t = t;
-  WorkParallelForN(
-      particles->GetNumParticles(),
-      std::bind(&SelfCollision::_UpdateContacts, this, particles, 
-        std::placeholders::_1, std::placeholders::_2), PACKET_SIZE);
-}
-
 void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
@@ -832,7 +819,9 @@ void SelfCollision::_ResetContacts(Particles* particles)
 {
   size_t numParticles = particles->GetNumParticles();
   _hits.resize(numParticles);
-  memset(&_hits[0], 0, _hits.size() * sizeof(bool));
+  memset(&_hits[0], 0, _hits.size() * sizeof(int));
+  _corrected.resize(numParticles);
+  memset(&_corrected[0], 0, _corrected.size() * sizeof(int));
 
   /*
   _c2p.clear();
@@ -903,7 +892,7 @@ void SelfCollision::_StoreContactLocation(Particles* particles, int index, int o
 void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints)
 {
-/*
+  /*
   CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
 

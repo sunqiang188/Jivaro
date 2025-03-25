@@ -295,6 +295,32 @@ protected:
 
 };
 
+/*
+class CollisionConstraint : public Constraint
+{
+public:
+  CollisionConstraint(Body* body, const VtArray<int>& elems, 
+    float stiffness=0.f, float damping=0.25f);
+
+  size_t GetTypeId() const override { return TYPE_ID; };
+  size_t GetElementSize() const override { return ELEM_SIZE; };
+
+  void GetPoints(Particles* particles, VtArray<GfVec3f>& results,
+    VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
+
+  void Reset(Particles* particles) override;
+  void SolvePosition(Particles* particles, float dt) override;
+
+  static size_t                 ELEM_SIZE;
+
+protected:
+  static size_t                 TYPE_ID;
+  VtArray<Contact>              _contacts;
+};
+*/
+ConstraintsGroup* CreateCollisionConstraints(Body* body, float stiffness=0.5f, float damping=0.1f);
+
+
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

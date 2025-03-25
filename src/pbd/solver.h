@@ -125,10 +125,9 @@ public:
 private:
   void _ResetContacts();
   void _PrepareContacts();
-  //void _UpdateContacts(float t);
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);
-  void _SolveVelocities(std::vector<Constraint*>& constraints);
+  void _SolveVelocities();
   void _SolveCollisions();
 
   void _IntegrateParticles(size_t begin, size_t end);
