@@ -21,6 +21,7 @@ Constraint::Constraint(size_t elementSize, float stiffness,
   , _compliance(stiffness > 0.f ? 1.f / stiffness : 0.f)
   , _damp(damp)
   , _color(RANDOM_0_1, RANDOM_0_1, RANDOM_0_1)
+  , _active(true)
 {
   const size_t numElements = elems.size() / elementSize;
 
