@@ -387,27 +387,55 @@ void Solver::_ResetContacts()
   for (auto& contact: _contacts)
     delete contact;
 
+  for(auto& contact: _lastContacts)
+    delete contact;
+
   _contacts.clear();
+  _lastContacts.clear();
 }
 
 void Solver::_PrepareContacts()
 {
   _timer->Start(0);
-  _ResetContacts();
+  for (auto& contact: _contacts)
+    delete contact;
+
+  _contacts.clear();
 
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
-
 
   if(_selfCollisions)
     _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
   _particles.ResetCounter(_contacts, 1);
   _timer->Stop();
-
 }
 
 
+
+void Solver::_UpdateContacts(float t)
+{
+  for (auto& collision : _collisions)
+    collision->UpdateContacts(&_particles, t);
+
+  if(_selfCollisions)
+    _selfCollisions->UpdateContacts(&_particles, t);
+}
+
+void Solver::_StoreLastContacts()
+{
+  for(auto& contact: _lastContacts)
+    delete contact;
+  _lastContacts.clear();
+
+  for(Constraint* constraint: _contacts)
+  {
+    CollisionConstraint* collisionConstraint = (CollisionConstraint*)constraint;
+    Collision*  collision = collisionConstraint->GetCollision();
+    collision->CreateContactConstraints(&_particles, _bodies, _lastContacts);
+  }
+}
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
 {
@@ -489,68 +517,28 @@ Solver::_SolveConstraints(std::vector<Constraint*>& constraints)
     });
   
   // apply constraint serially
-  for (auto& constraint : constraints) {
-    if(constraint->IsActive()) 
+  for (auto& constraint : constraints)
+    if(constraint->IsActive())
       constraint->ApplyPosition(&_particles);
-  }
 
 }
 
 void 
-Solver::_SolveVelocities()
+Solver::_SolveVelocities(std::vector<Constraint*>& constraints)
 {
-  for(size_t index = 0; index < _particles.GetNumParticles(); ++index) {
-    for(Collision* collision: _collisions) {
-      if(!collision->CheckCorrected(index))continue;
-      GfVec3f vel = (_particles.position[index] - _particles.previous[index]) - 
-        collision->GetVelocity(&_particles, index) * _stepTime;
 
-      GfVec3f nrm = collision->GetGradient(&_particles, index);
-      GfVec3f vT = vel - nrm * GfDot(vel, nrm);
-      
-      _particles.velocity[index] -= vT * _stepTime;
-    }
-  }
+  // solve velocities
+  WorkParallelForEach(constraints.begin(), constraints.end(),
+    [&](Constraint* constraint) {
+      if(constraint->IsActive())
+        constraint->SolveVelocity(&_particles, _stepTime); 
+    });
 
-}
+  // apply velocities serially
+  for (auto& constraint : constraints)
+    if(constraint->IsActive())
+      constraint->ApplyVelocity(&_particles);
 
-GfVec3f _ComputeFriction(const float friction, const GfVec3f& correction, 
-  const GfVec3f& relativeVelocity)
-{
-  float correctionLength = correction.GetLength();
-  if (friction > 0 && correctionLength > 0.f)
-  {
-    GfVec3f correctionNorm = correction / correctionLength;
-
-    GfVec3f tangentialVelocity = relativeVelocity - correctionNorm *
-      GfDot(relativeVelocity, correctionNorm);
-    float tangentialLength = tangentialVelocity.GetLength();
-    float maxTangential = correctionLength * friction;
-
-    return -tangentialVelocity * GfMin(maxTangential / tangentialLength, 1.0f);
-  }
-
-  return GfVec3f(0.f);
-}
-
-void 
-Solver::_SolveCollisions()
-{
-  for(size_t index = 0; index < _particles.GetNumParticles(); ++index) {
-    for(Collision* collision: _collisions) {
-      collision->SetCorrected(index, false);
-      if(!collision->CheckHit(index))continue;
-      float d = collision->GetValue(&_particles, index);
-      if(d > 0.f) continue;
-      GfVec3f correction = -d * collision->GetGradient(&_particles, index);
-      _particles.predicted[index] += correction;
-
-      GfVec3f relativeVelocity = _particles.predicted[index] - _particles.previous[index];
-			GfVec3f friction = _ComputeFriction(collision->GetFriction(), correction, relativeVelocity);
-			_particles.predicted[index] += friction;
-      collision->SetCorrected(index, true);
-    }
-  }
 }
 
 
@@ -620,10 +608,10 @@ void Solver::Reset(UsdStageRefPtr& stage)
     constraint->Reset(&_particles);
   
   if(_selfCollisions)
-    _selfCollisions->Reset(&_particles);
+    _selfCollisions->Reset();
 
   for(auto& collision: _collisions)
-    collision->Reset(&_particles);
+    collision->Reset();
 
 }
 
@@ -646,13 +634,10 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   //_SolveConstraints(_lastContacts);
   //_SolveVelocities(_lastContacts);
 
-
-  
   _PrepareContacts();
 
-  
   for(size_t si = 0; si < _subSteps; ++si) {
-    //_UpdateContacts(si * stepTime);
+    _UpdateContacts(si * stepTime);
 
     _timer->Start(1);
     // integrate particles
@@ -667,17 +652,11 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
 
     // solve and apply contacts
     _timer->Next();
-    for(auto& collision: _collisions)
-      collision->SetTime(si * stepTime);
-    //_SolveCollisions();
     _SolveConstraints(_contacts);
     //_SolveConstraints(_lastContacts);
   
 
     _timer->Next();
-
-  
-    //_timer->Next();
 
     // update particles
     WorkParallelForN(
@@ -687,7 +666,6 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
     _timer->Stop();
 
     _SolveVelocities(_contacts);
-    //_SolveVelocities();
 
   }
   

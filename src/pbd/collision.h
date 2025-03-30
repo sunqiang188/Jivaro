@@ -8,7 +8,8 @@
 #include "../common.h"
 #include "../acceleration/hashGrid.h"
 #include "../acceleration/bvh.h"
-#include "../pbd/element.h"
+#include "../pbd/contact.h"
+#include "../pbd/mask.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -23,7 +24,7 @@ class Solver;
 class HashGrid;
 
 
-class Collision : public Element
+class Collision : public Mask
 {
 public:
 
@@ -40,7 +41,7 @@ public:
 
   Collision(Geometry* collider, const SdfPath& path, 
     float restitution=0.5f, float friction=0.5f) 
-    : Element(Element::COLLISION)
+    : Mask(Element::COLLISION)
     , _collider(collider)
     , _restitution(restitution)
     , _friction(friction){};
@@ -56,28 +57,43 @@ public:
   virtual void Update(const UsdPrim& prim, double time);
   virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints, float ft);
+  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n);
+  virtual void UpdateContacts(Particles* particles, float t);
+
+  virtual void CreateContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
+    std::vector<Constraint*>& constraints);
 
   virtual Geometry* GetGeometry(){return _collider;};
-  virtual void SetTime(float time){_t = time;};
 
-  //virtual bool Compute(Particles* particles, size_t index, Contact& contact){return false;};
+  virtual size_t GetContactComponent(size_t index, size_t c=0) const;
+  virtual GfVec3f GetContactPosition(size_t index, size_t c=0) const;
+  virtual GfVec3f GetContactNormal(size_t index, size_t c=0) const;
+  virtual GfVec3f GetContactVelocity(size_t index, size_t c=0) const;
+  virtual float GetContactDepth(size_t index, size_t c=0) const;
+  virtual float GetContactInitDepth(size_t index, size_t c=0) const;
+  virtual float GetMaxSeparationVelocity() const {return _maxSeparationVelocity;};
+  virtual float GetStepTime() const {return _t;};
+
+  virtual void SetContactTouching(size_t index, bool touching, size_t c=0);
+  virtual bool IsContactTouching(size_t index, size_t c=0) const;
+
+  Contacts& GetContacts(){return _contacts;};
+  size_t GetNumContacts(size_t index){return _contacts.GetNumUsed(index);};
+  size_t GetTotalNumContacts(){return _contacts.GetTotalNumUsed();};
+  const std::vector<int>& GetC2P(){return _c2p;};
+
+  virtual bool Compute(Particles* particles, size_t index, Contact& contact){return false;};
 
   virtual float GetValue(Particles* particles, size_t index) = 0;
   virtual GfVec3f GetGradient(Particles* particles, size_t index) = 0; // pure virtual
   virtual GfVec3f GetVelocity(Particles* particles, size_t index);
 
-  inline bool CheckHit(size_t index) const {
-    return _hits[index] > 0;
+  inline bool CheckHit(size_t index) {
+    return BIT_CHECK(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
   };
   inline void SetHit(size_t index, bool hit) {
-    _hits[index] = (int)hit;
-  };
-
-  inline bool CheckCorrected(size_t index) {
-    return _corrected[index];
-  };
-  inline void SetCorrected(size_t index, bool corrected) {
-    _corrected[index] = corrected;
+    if(hit) BIT_SET(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
+    else BIT_CLEAR(_hits[index/Mask::INT_BITS], index%Mask::INT_BITS);
   };
 
   float GetFriction() const {return _friction;};
@@ -86,7 +102,7 @@ public:
   float GetMargin()const {return _margin;};
   float GetStiffness() const {return _stiffness;};
 
-  void Reset(Particles* particles);
+  void Reset();
 
   // for visual debugging
   virtual void GetPoints(Particles* particles, VtArray<GfVec3f>& points,
@@ -101,27 +117,20 @@ protected:
   static const size_t PACKET_SIZE;
 
   virtual void _UpdateParameters(const UsdPrim& prim, double time);
-  
   virtual void _ResetContacts(Particles* particles);
-  
   virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints);
   virtual void _FindContacts(Particles* particles, size_t begin, size_t end, float ft);
-  /*
   virtual void _UpdateContacts(Particles* particles, size_t begin, size_t end);
-  */
+  
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
-  /*
   virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact);
-  */
 
   // hits encode vertex hit in the int list bits
-  std::vector<int>                  _hits;
-  std::vector<int>                  _corrected;
-  VtArray<GfVec3f>                  _correction;
-  //std::vector<int>                  _c2p;
+  VtArray<int>                 _hits;
+  std::vector<int>                  _c2p;
   size_t                            _numParticles;
-  //Contacts                          _contacts;
+  Contacts                          _contacts;
 
   bool                              _enabled;
   float                             _restitution;
@@ -143,11 +152,13 @@ public:
     float restitution=0.5f, float friction= 0.5f);
   size_t GetTypeId() const override { return TYPE_ID; };
 
-  //virtual bool Compute(Particles* particles, size_t index, Contact& contact);
+  virtual bool Compute(Particles* particles, size_t index, Contact& contact);
 
   float GetValue(Particles* particles, size_t index) override;
   GfVec3f GetGradient(Particles* particles, size_t index) override;
   void Update(const UsdPrim& prim, double time) override;
+
+  //void UpdateContacts(Particles* particles) override;
 
 protected:
   void _UpdatePositionAndNormal();
@@ -254,7 +265,7 @@ protected:
   void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
   void _FindContact(Particles* particles, size_t index, float ft) override;  
-  //void _StoreContactLocation(Particles* particles, int index, Contact* contact) override;
+  void _StoreContactLocation(Particles* particles, int index, Contact* contact) override;
 
 private:
   static size_t                 TYPE_ID;
@@ -278,6 +289,8 @@ public:
   GfVec3f GetGradient(Particles* particles, size_t index, size_t other);
   GfVec3f GetVelocity(Particles* particles, size_t index, size_t other);
 
+  void UpdateContacts(Particles* particles, float t) override;
+
   void Update(const UsdPrim& prim, double time) override;
 
   void FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
@@ -289,9 +302,9 @@ protected:
   void _UpdateAccelerationStructure();
   void _ResetContacts(Particles* particles) override;
   void _FindContacts(Particles* particles, size_t begin, size_t end, float ft) override;
-  //void _UpdateContacts(Particles* particles, size_t begin, size_t end) override;
+  void _UpdateContacts(Particles* particles, size_t begin, size_t end) override;
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  //void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact);
+  void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact);
 
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints)override;
