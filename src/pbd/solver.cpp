@@ -629,6 +629,8 @@ void Solver::Reset(UsdStageRefPtr& stage)
 
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
+  //_StoreLastContacts();
+
   UpdateInputs(stage, time);
   UpdateParameters(stage, time);
   UpdateCollisions(stage, time);
@@ -640,9 +642,14 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   size_t numThreads = WorkGetConcurrencyLimit();
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
+  
+  //_SolveConstraints(_lastContacts);
+  //_SolveVelocities(_lastContacts);
+
 
   
   _PrepareContacts();
+
   
   for(size_t si = 0; si < _subSteps; ++si) {
     //_UpdateContacts(si * stepTime);
@@ -664,6 +671,10 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
       collision->SetTime(si * stepTime);
     //_SolveCollisions();
     _SolveConstraints(_contacts);
+    //_SolveConstraints(_lastContacts);
+  
+
+    _timer->Next();
 
   
     //_timer->Next();
@@ -675,6 +686,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
         std::placeholders::_1, std::placeholders::_2), packetSize);
     _timer->Stop();
 
+    _SolveVelocities(_contacts);
     //_SolveVelocities();
 
   }

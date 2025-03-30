@@ -115,7 +115,14 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
   //_t = 0.f;
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
     const size_t index = elements[elemIdx];
-    _StoreContactLocation(particles, index, _contacts.Use(index));
+    Contact* contact = _contacts.Use(index);
+    _StoreContactLocation(particles, index, contact);
+
+    if(contact->IsTouching()) {
+      GfVec3f correction = contact->GetNormal() * contact->GetDepth();
+      //particles->velocity[index] -= correction;
+      particles->velocity[index] += correction;
+    }
   }
 }
 */
