@@ -960,7 +960,7 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
     const GfVec3f correction = -d * normal;
     const GfVec3f damp = GfDot(correction, normal) * normal * _collision->GetDamp();
-    _correction[elem] = correction - damp;
+    _correction[elem] = correction;// - damp;
     
     GfVec3f friction = _ComputeFriction(_collision->GetFriction(), 
       _correction[elem], particles->velocity[index] - velocity);
@@ -973,7 +973,7 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 {
- 
+
   _ResetCorrection(); 
   const size_t numElements = _elements.size();
 
@@ -982,10 +982,13 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 
     if(!_collision->IsContactTouching(index)) continue;
 
-    const GfVec3f correction = particles->predicted[index] - particles->previous[index];
-    const GfVec3f relativeVelocity = particles->velocity[index] - _collision->GetContactVelocity(index) * dt;
+    GfVec3f vel = (particles->position[index] - particles->previous[index]) -
+        _collision->GetVelocity(particles, index) * dt;
 
-   _correction[elem] += (-particles->velocity[index] + _collision->GetContactVelocity(index)) * 0.5f;
+    GfVec3f nrm = _collision->GetGradient(particles, index);
+    GfVec3f vT = vel - nrm * GfDot(vel, nrm);
+    
+    _correction[elem] = -particles->velocity[index] * 0.5f + vT;
   }
   
 }
@@ -1053,7 +1056,6 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
 {
-  return;
   _ResetCorrection();
   const size_t numElements = _elements.size();
   GfVec3f velocity, normal;
@@ -1137,6 +1139,7 @@ ContactConstraint::ContactConstraint(Body* body, const VtArray<int>& elems, Coll
   const GfVec3f* positions = ((Deformable*)geometry)->GetPositionsCPtr();
   size_t numElements = _elements.size() / ELEM_SIZE;
 
+  _contacts.reserve(contacts.size());
   for(auto& contact: contacts)
     _contacts.push_back(*contact);
 
@@ -1165,7 +1168,7 @@ void ContactConstraint::SolvePosition(Particles* particles, float dt)
     const GfVec3f normal(_contacts[elem].GetNormal());
     const float distance(_contacts[elem].GetDepth());
 
-    _correction[elem] += (position - distance * normal) - particles->predicted[index];
+    _correction[elem] += ((position - distance * normal) - particles->predicted[index]) * dt;
   }
 }
 

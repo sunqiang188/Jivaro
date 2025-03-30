@@ -617,7 +617,7 @@ void Solver::Reset(UsdStageRefPtr& stage)
 
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
-  _StoreLastContacts();
+  //_StoreLastContacts();
 
   UpdateInputs(stage, time);
   UpdateParameters(stage, time);
@@ -631,10 +631,11 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
 
   size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
   
-  _SolveConstraints(_lastContacts);
-  _SolveVelocities(_lastContacts);
+  //_SolveConstraints(_lastContacts);
+  //_SolveVelocities(_lastContacts);
 
   _PrepareContacts();
+
   for(size_t si = 0; si < _subSteps; ++si) {
     _UpdateContacts(si * stepTime);
 
@@ -652,6 +653,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
     // solve and apply contacts
     _timer->Next();
     _SolveConstraints(_contacts);
+    //_SolveConstraints(_lastContacts);
   
 
     _timer->Next();
@@ -664,7 +666,6 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
     _timer->Stop();
 
     _SolveVelocities(_contacts);
-     _SolveVelocities(_lastContacts);
 
   }
   

@@ -76,8 +76,8 @@ public:
 protected:
   size_t        _geomId;
   size_t        _compId;
-  GfVec4d  _coords;
-  GfVec3d  _point;
+  GfVec4d       _coords;
+  GfVec3d       _point;
 };
 
 template<typename T>
