@@ -946,6 +946,7 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
   for (size_t elem = 0; elem < numElements; ++elem) {
     const size_t index = _elements[elem];
+    if(!_collision->IsContactActive(index)) continue;
 
     const GfVec3f normal = _collision->GetContactNormal(index);
     const GfVec3f velocity = _collision->GetContactVelocity(index);
@@ -957,14 +958,23 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
     particles->color[index] = GfVec3f(0.75, 0.75, 0.5);
     
+    float lambdaN = -d / particles->invMass[index];
+    _correction[elem] = lambdaN * normal ;
+    GfVec3f deltaP = particles->predicted[index] - particles->previous[index];
+    GfVec3f deltaPt = deltaP - GfDot(deltaP, normal) * normal;
+    float lambdaT = deltaPt.GetLength() / particles->invMass[index];
 
-    const GfVec3f correction = -d * normal;
+    if(lambdaT  < _collision->GetFriction() * lambdaN)
+      _correction[elem] -= deltaPt;
+
+    /*
     const GfVec3f damp = GfDot(correction, normal) * normal * _collision->GetDamp();
     _correction[elem] = correction;// - damp;
     
     GfVec3f friction = _ComputeFriction(_collision->GetFriction(), 
       _correction[elem], particles->velocity[index] - velocity);
     _correction[elem] +=  friction;
+    */
 
    _collision->SetContactTouching(index, true);
     

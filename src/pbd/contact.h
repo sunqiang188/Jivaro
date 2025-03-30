@@ -15,14 +15,16 @@ class SelfCollision;
 
 class Contact : public Location {
 public:
-  Contact(){};
+  Contact() : _active(false), _touching(false){};
   virtual ~Contact(){};
 
   void Init(Collision* collision, Particles* particles, size_t index);
   void Update(Collision* collision, Particles* particles, size_t index);
 
+  void SetActive(bool active){_active = active;};
+  bool IsActive() const {return _active;};
   void SetTouching(bool touching){_touching = touching;};
-  bool IsTouching(){return _touching;};
+  bool IsTouching() const {return _touching;};
   const GfVec3f& GetNormal() const {return _normal;};
   const GfVec3f& GetVelocity() const {return _velocity;};
   float GetDepth() const {return _depth;};
@@ -46,7 +48,7 @@ private:
 };
 
 
-static const size_t PARTICLE_MAX_CONTACTS = 32;
+static const size_t PARTICLE_MAX_CONTACTS = 16;
 
 class Contacts {
 
@@ -63,11 +65,13 @@ public:
   void ResetAllUsed();
 
   bool IsUsed(size_t index){return used[index] > 0;};
+  bool IsActive(size_t index, size_t second=0){return Get(index, second)->IsActive(); };
 
   Contact* Use(size_t index);
   Contact* LastUsed(size_t index);
   size_t GetNumUsed(size_t index) const;
   size_t GetTotalNumUsed() const;
+  size_t GetSize() const {return n;};
 
 private:
   size_t                n;

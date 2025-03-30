@@ -115,6 +115,8 @@ add_executable(${TARGET}
   acceleration/hashGrid.cpp
   acceleration/kdtree.cpp
 
+  pbd/contact.cpp 
+  pbd/mask.cpp 
   pbd/collision.cpp
   pbd/particle.cpp
   pbd/force.cpp

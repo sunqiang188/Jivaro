@@ -12,36 +12,40 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 void Contact::Init(Collision* collision, Particles* particles, size_t index)
 {
-  /*
-  if(collision->GetTypeId() == Collision::MESH) {
+
+  if(IsValid() && collision->GetTypeId() == Collision::MESH) {
     Mesh* mesh = (Mesh*)collision->GetGeometry();
     const Triangle* triangle = mesh->GetTriangle(GetComponentIndex());
     SetPoint(ComputeInterpolatedPosition(mesh->GetPositionsCPtr(), 
       mesh->GetPreviousCPtr(), 0.f, &triangle->vertices[0], 3, &mesh->GetMatrix()));
-  }*/
+  }
   
   _normal = collision->GetGradient(particles, index);
   _initDepth = collision->GetValue(particles, index);
   _depth = _initDepth;
+
+  
   if(collision->GetTypeId() != Collision::SELF) 
     _velocity = collision->GetVelocity(particles, index);
   else
     _velocity = ((SelfCollision*)collision)->GetVelocity(particles, index, GetComponentIndex());
   _rotationAlongFrame = GfRotation();
-  _touching = _depth <= 0.0;
-
+  _active = true;
+  _touching = false;
+  
+  
+  
 }
 
 void Contact::Update(Collision* collision, Particles* particles, size_t index)
 {
-  /*
-  if(collision->GetTypeId() == Collision::MESH) {
+ 
+  if(IsValid() && collision->GetTypeId() == Collision::MESH) {
     Mesh* mesh = (Mesh*)collision->GetGeometry();
     const Triangle* triangle = mesh->GetTriangle(GetComponentIndex());
     SetPoint(ComputeInterpolatedPosition(mesh->GetPositionsCPtr(), 
       mesh->GetPreviousCPtr(), collision->GetStepTime(), &triangle->vertices[0], 3, &mesh->GetMatrix()));
   }
-  */
   
   _normal = collision->GetGradient(particles, index);
   _depth = collision->GetValue(particles, index);
@@ -52,7 +56,7 @@ void Contact::Update(Collision* collision, Particles* particles, size_t index)
   else
     _velocity = ((SelfCollision*)collision)->GetVelocity(particles, index, GetComponentIndex());
 
-  
+  /*
   if(collision->GetTypeId() != Collision::SELF) 
     _velocity = collision->GetVelocity(particles, index);
     */

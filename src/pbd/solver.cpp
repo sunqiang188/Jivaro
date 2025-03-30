@@ -386,22 +386,14 @@ void Solver::_ResetContacts()
 {
   for (auto& contact: _contacts)
     delete contact;
-
-  for(auto& contact: _lastContacts)
-    delete contact;
-
   _contacts.clear();
-  _lastContacts.clear();
+  for(Collision* collision: _collisions)
+    collision->Init(&_particles, _bodies, _contacts);
 }
 
 void Solver::_PrepareContacts()
 {
   _timer->Start(0);
-  for (auto& contact: _contacts)
-    delete contact;
-
-  _contacts.clear();
-
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
@@ -482,7 +474,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   const double velDecay = std::exp(std::log(0.95f) * _stepTime);
 
   for(size_t index = begin; index < end; ++index) {
-    if (state[index] != Particles::ACTIVE)continue;
+    //if (state[index] != Particles::ACTIVE)continue;
     
     // update velocity
     //previous[index] = velocity[index];
@@ -603,6 +595,7 @@ void Solver::Reset(UsdStageRefPtr& stage)
   if(_selfCollisions)delete _selfCollisions;
   _selfCollisions = new SelfCollision(&_particles, 
     GetPrim().GetPath().AppendProperty(TfToken("selfCollide")), 0.5f, 0.5f);
+  _selfCollisions->Init(&_particles, _bodies, _contacts);
 
   for(auto& constraint: _constraints)
     constraint->Reset(&_particles);
@@ -665,7 +658,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
         std::placeholders::_1, std::placeholders::_2), packetSize);
     _timer->Stop();
 
-    _SolveVelocities(_contacts);
+    //_SolveVelocities(_contacts);
 
   }
   

@@ -201,7 +201,6 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
         case Geometry::MESH:
           std::cout << " - created mesh collision " << _clothesId[c] << std::endl;
           collision = new MeshCollision(_colliders[c], _collidersId[c], restitution, friction);
-          ((MeshCollision*)collision)->Init(_solver->GetNumParticles());
           break;
       }
       

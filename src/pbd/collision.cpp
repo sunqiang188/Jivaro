@@ -86,7 +86,7 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next())
-    if(_contacts.IsUsed(index)) {
+    if(_contacts.IsActive(index)) {
       Contact* contact = _contacts.Get(index);
       contact->Update(this, particles, index);
     }
@@ -96,15 +96,11 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
   std::vector<Constraint*>& constraints, float ft)
 {
 
-  Init(particles->GetNumParticles());
-  
-  _ResetContacts(particles);
   if(!_enabled)return; 
 
   WorkParallelForN(particles->GetNumParticles(),
     std::bind(&Collision::_FindContacts, this, particles,
       std::placeholders::_1, std::placeholders::_2, ft), PACKET_SIZE);
-  _BuildContacts(particles, bodies, constraints);
 }
 
 void Collision::StoreContactsLocation(Particles* particles, int* elements, size_t n)
@@ -112,60 +108,31 @@ void Collision::StoreContactsLocation(Particles* particles, int* elements, size_
   _t = 0.f;
   for (size_t elemIdx = 0; elemIdx < n; ++elemIdx) {
     const size_t index = elements[elemIdx];
-    Contact* contact = _contacts.Use(index);
+    Contact* contact = _contacts.Get(index);
     _StoreContactLocation(particles, index, contact);
-
-    if(contact->IsTouching()) {
-      GfVec3f correction = contact->GetNormal() * contact->GetDepth();
-      //particles->velocity[index] -= correction;
-      particles->velocity[index] += correction;
-    }
   }
-}
-
-
-void Collision::_ResetContacts(Particles* particles)
-{
-  const size_t numParticles = particles->GetNumParticles();
-  _hits.resize(numParticles / sizeof(int) + 1);
-  memset(&_hits[0], 0, _hits.size() * sizeof(int));
-
-  _c2p.clear();
-  _c2p.reserve(numParticles);
-
-  _contacts.Resize(numParticles, 1);
-  _contacts.ResetAllUsed();
-
 }
 
 void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints)
 {
   CollisionConstraint* constraint = NULL;
-  size_t numParticles = particles->GetNumParticles();
-  size_t numBodies = bodies.size();
 
   VtArray<int> elements;
   Body* currentBody = nullptr;
-
-  Mask::Iterator iterator(this, 0, numParticles);
-  size_t particleToContactIdx = 0;
-  size_t numHits = 0;
+  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    if (CheckHit(index)) {
-      numHits++;
-      _c2p.push_back(index);
-      if (particles->body[index] != currentBody || elements.size() >= Constraint::BlockSize) {
-        if (elements.size()) {
-          constraint = new CollisionConstraint(currentBody, this, elements, _stiffness, _damp);
-          StoreContactsLocation(particles, & elements[0], elements.size());
-          constraints.push_back(constraint);
-          elements.clear();
-        }
-        currentBody = particles->body[index];
-      } 
-      elements.push_back(index);
-    }
+
+    if (particles->body[index] != currentBody || elements.size() >= Constraint::BlockSize) {
+      if (elements.size()) {
+        constraint = new CollisionConstraint(currentBody, this, elements, _stiffness, _damp);
+        StoreContactsLocation(particles, & elements[0], elements.size());
+        constraints.push_back(constraint);
+        elements.clear();
+      }
+      currentBody = particles->body[index];
+    } 
+    elements.push_back(index);
   } 
   
   if (elements.size()) {
@@ -179,7 +146,8 @@ void Collision::_FindContacts(Particles* particles, size_t begin, size_t end, fl
 {
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    _FindContact(particles, index, ft);
+    if(!_contacts.Get(index)->IsTouching())
+      _FindContact(particles, index, ft);
   }
 }
 
@@ -202,7 +170,7 @@ Collision::CreateContactConstraints(Particles* particles, const std::vector<Body
       for (; index != Mask::INVALID_INDEX; index = iterator.Next()) {
         if(!_contacts.GetNumUsed(index)) continue;
         
-        Contact* contact = _contacts.Get(index);
+        Contact* contact = _contacts.Use(index);
         
         if(contact->IsTouching()) {
           //const GfVec3f velocity = mesh->GetTriangleVelocity(contact->GetComponentIndex());
@@ -263,8 +231,16 @@ Collision::CreateContactConstraints(Particles* particles, const std::vector<Body
 // 
 // Init
 //
-void Collision::Init(size_t numParticles) 
+void Collision::Init(Particles* particles, const std::vector<Body*>& bodies,
+  std::vector<Constraint*>& constraints) 
 {
+  std::cout << "Collision INITIALIZE : " << particles->GetNumParticles() << std::endl;
+  _contacts.Resize(particles->GetNumParticles(), 1);
+  _contacts.ResetAllUsed();
+
+  _BuildContacts(particles, bodies, constraints);
+  std::cout << "created  : " << constraints.size() << " constraints " << std::endl;
+
 }
 
 
@@ -336,6 +312,18 @@ bool Collision::IsContactTouching(size_t index, size_t c) const
 {
   return _contacts.Get(index, c)->IsTouching();
 }
+
+void Collision::SetContactActive(size_t index, bool active, size_t c)
+{
+  _contacts.Get(index, c)->SetActive(active);
+}
+
+bool Collision::IsContactActive(size_t index, size_t c) const
+{
+  return _contacts.Get(index, c)->IsActive();
+}
+
+
 
 /*
 void _InitializeContact(Particles* particles, int index, Contact* contact, 
@@ -432,7 +420,7 @@ void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
   float d = GfDot(_normal, predicted - _position)  - (particles->radius[index] + _margin);
-  SetHit(index, d < 0.f);
+  _contacts.Get(index)->SetActive(d < 0.f);
 }
 
 //----------------------------------------------------------------------------------------
@@ -492,7 +480,8 @@ void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
   const GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
 
-  SetHit(index, cube->SignedDistance(predicted) - particles->radius[index] / scaleFactor < Collision::TOLERANCE_MARGIN);
+  _contacts.Get(index)->SetActive(
+    cube->SignedDistance(predicted) - particles->radius[index] / scaleFactor < Collision::TOLERANCE_MARGIN);
 }
 
 float BoxCollision::GetValue(Particles* particles, size_t index)
@@ -544,7 +533,7 @@ void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const GfVec3f velocity = particles->velocity[index] * ft;
   GfVec3f predicted(_collider->GetInverseMatrix().Transform(particles->predicted[index] + velocity));
-  SetHit(index, predicted.GetLength() - particles->radius[index] < _radius);
+  _contacts.Get(index)->SetActive(predicted.GetLength() - particles->radius[index] < _radius);
 }
 
 float SphereCollision::GetValue(Particles* particles, size_t index)
@@ -618,7 +607,7 @@ void CapsuleCollision::_FindContact(Particles* particles, size_t index, float ft
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
   const float d = capsule->SignedDistance(predicted) - (particles->radius[index] + _margin) / scaleFactor;
 
-  SetHit(index, d < Collision::TOLERANCE_MARGIN);
+  _contacts.Get(index)->SetActive(d < Collision::TOLERANCE_MARGIN);
 }
 
 float CapsuleCollision::GetValue(Particles* particles, size_t index)
@@ -663,16 +652,33 @@ MeshCollision::~MeshCollision()
 {
 }
 
+void MeshCollision::Init(Particles* particles, const std::vector<Body*>& bodies,
+  std::vector<Constraint*>& constraints)
+{
+  size_t numParticles = particles->GetNumParticles();
+  std::cout << "Mesh Collision INITIALIZE : " << numParticles << std::endl;
+
+  _contacts.Resize(numParticles, 1);
+  _contacts.ResetAllUsed();
+
+  _closest.clear();
+  _closest.resize(numParticles, Location());
+  std::cout << "closest initialized.." << std::endl;
+
+  _BuildContacts(particles, bodies, constraints);
+  std::cout << "created  : " << constraints.size() << " constraints " << std::endl;
+}
+
 void MeshCollision::Update(const UsdPrim& prim, double time)
 {
   _UpdateParameters(prim, time);
   _UpdateAccelerationStructure();
-}
 
-void MeshCollision::Init(size_t numParticles)
-{
-  _closest.clear();
-  _closest.resize(numParticles, Location());
+  for(size_t i = 0; i < _contacts.GetSize(); ++i) {
+    Contact* contact = _contacts.Get(i);
+    if(!contact->IsTouching()) 
+      contact->SetActive(false);
+  }
 }
 
 void MeshCollision::_CreateAccelerationStructure()
@@ -701,6 +707,7 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   const GfVec3f predicted = particles->predicted[index] + particles->velocity[index] * ft;
   const float maxDistance = particles->velocity[index].GetLength() * ft + particles->radius[index] + _margin;
 
+  Contact* contact = _contacts.Get(index);
   if(_bvh.Closest(predicted, &_closest[index], maxDistance * 4.f)) {
 
     const Triangle* triangle = mesh->GetTriangle(_closest[index].GetComponentIndex());
@@ -712,17 +719,15 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
       _closest[index].ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
 
     const GfVec3f delta = predicted - position;
-    SetHit(index, (delta.GetLength() - particles->radius[index]) < _margin);
+    contact->SetActive((delta.GetLength() - particles->radius[index]) < _margin);
   }
-    
-  else
-    SetHit(index, false);
-  
+
 }
 
 float 
 MeshCollision::GetValue(Particles* particles, size_t index)
 {
+  if(!_closest[index].IsValid())return 0.f;
   Mesh* mesh = (Mesh*)GetGeometry();
   const GfVec3f* positions = mesh->GetPositionsCPtr();
   const GfVec3f* previous = mesh->GetPreviousCPtr();
@@ -875,6 +880,20 @@ SelfCollision::~SelfCollision()
   
 }
 
+// 
+// Init
+//
+void SelfCollision::Init(Particles* particles, const std::vector<Body*>& bodies,
+  std::vector<Constraint*>& constraints) 
+{
+  std::cout << "SelfCollision INITIALIZE : " << particles->GetNumParticles() << std::endl;
+  _contacts.Resize(particles->GetNumParticles(), PARTICLE_MAX_CONTACTS);
+  _contacts.ResetAllUsed();
+
+  _BuildContacts(particles, bodies, constraints);
+  std::cout << "created  : " << constraints.size() << " constraints " << std::endl;
+}
+
 void SelfCollision::_UpdateParameters(const UsdPrim& prim, double time)
 {
   UsdPbdCollisionAPI api(prim);
@@ -890,6 +909,8 @@ void SelfCollision::_UpdateParameters(const UsdPrim& prim, double time)
 void SelfCollision::Update(const UsdPrim& prim, double time)
 {
   _UpdateAccelerationStructure();
+  _contacts.ResetAllUsed();
+
 }
 
 // 
@@ -901,13 +922,11 @@ void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>&
 {
   if(!_neighborsInitialized)_ComputeNeighbors(bodies);
 
-  _ResetContacts(particles);
-
   WorkParallelForN(particles->GetNumParticles(),
     std::bind(&SelfCollision::_FindContacts, this, particles,
       std::placeholders::_1, std::placeholders::_2, ft), PACKET_SIZE);
 
-  _BuildContacts(particles, bodies, constraints);
+  
 
 }
 
@@ -943,19 +962,7 @@ void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t e
 }
 
 
-void SelfCollision::_ResetContacts(Particles* particles)
-{
-  size_t numParticles = particles->GetNumParticles();
-  _hits.resize(numParticles / sizeof(int) + 1);
-  memset(&_hits[0], 0, _hits.size() * sizeof(int));
 
-  _c2p.clear();
-  _c2p.reserve(numParticles * PARTICLE_MAX_CONTACTS);
-
-  _contacts.Resize(numParticles, PARTICLE_MAX_CONTACTS);
-  _contacts.ResetAllUsed();
-
-}
 
 void SelfCollision::_FindContacts(Particles* particles, size_t begin, size_t end, float ft)
 {
@@ -992,7 +999,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
       numCollide++;
     }
   }
-  SetHit(index, (numCollide > 0));
+  _contacts.Get(index)->SetActive(numCollide > 0);
 }
 
 
@@ -1028,10 +1035,7 @@ void SelfCollision::_BuildContacts(Particles* particles, const std::vector<Body*
   Mask::Iterator iterator(this, 0, numParticles);
   size_t index = iterator.Begin();
   for (; index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    size_t numUsed = _contacts.GetNumUsed(index);
-    if(numUsed) {
-      elements.push_back(index);      
-    } 
+    elements.push_back(index);   
     
     if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
       if (elements.size()) {
