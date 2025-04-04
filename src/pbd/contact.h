@@ -15,16 +15,21 @@ class SelfCollision;
 
 class Contact : public Location {
 public:
-  Contact() : _active(false), _touching(false){};
+  enum State {
+    DISCARD,
+    ACTIVE,
+    TOUCHING
+  };
+  Contact() : _state(DISCARD){};
   virtual ~Contact(){};
 
   void Init(Collision* collision, Particles* particles, size_t index);
   void Update(Collision* collision, Particles* particles, size_t index);
 
-  void SetActive(bool active){_active = active;};
-  bool IsActive() const {return _active;};
-  void SetTouching(bool touching){_touching = touching;};
-  bool IsTouching() const {return _touching;};
+  void SetActive(bool active){_state = active;};
+  bool IsActive() const {return _state != DISCARD;};
+  void SetTouching(bool touching){touching ? TOUCHING : ACTIVE;};
+  bool IsTouching() const {return _state == TOUCHING;};
   const GfVec3f& GetNormal() const {return _normal;};
   const GfVec3f& GetVelocity() const {return _velocity;};
   float GetDepth() const {return _depth;};
@@ -35,16 +40,13 @@ public:
   void SetInitDepth(float depth){_initDepth = depth;};
 
 private:      
-  GfRotation        _rotationAlongFrame;
-  GfVec3f           _prevNormal;
   GfVec3f           _normal;   // contact normal
   GfVec3f           _velocity; // relative velocity
 
   float             _initDepth;// start frame penetration depth
   float             _depth;    // current substep penetration depth
 
-  bool              _active;
-  bool              _touching;
+  size_t            _state;
 };
 
 

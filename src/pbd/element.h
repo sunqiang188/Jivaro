@@ -17,8 +17,7 @@ public:
     BODY, 
     COLLISION, 
     FORCE, 
-    CONSTRAINT, 
-    CONTACT 
+    CONSTRAINT
   };
   
   short GetType() {return _type;};

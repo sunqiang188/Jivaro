@@ -134,8 +134,6 @@ struct Particles
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);
 
-  void ResetCounter(const std::vector<Constraint*>& constraints, size_t c);
-
   void _EnsureDataSize(size_t size);
 
   short*         state;

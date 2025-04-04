@@ -80,7 +80,7 @@ public:
   virtual void SolvePosition(Particles* particles, float dt) = 0;
   virtual void SolveVelocity(Particles* particles, float dt){};
 
-  virtual void GetPoints(Particles* particles, VtArray<GfVec3f>& positions, 
+  virtual size_t GetPoints(Particles* particles, VtArray<GfVec3f>& positions, 
     VtArray<float>& radius, VtArray<GfVec3f>& colors) = 0;
 
   // this two has to be called serially 
@@ -115,7 +115,7 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, VtArray<GfVec3f>& results,
+  size_t GetPoints(Particles* particles, VtArray<GfVec3f>& results,
     VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
 
 
@@ -140,7 +140,7 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, VtArray<GfVec3f>& results,
+  size_t GetPoints(Particles* particles, VtArray<GfVec3f>& results,
     VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
 
   void SolvePosition(Particles* particles, float dt) override;
@@ -167,7 +167,7 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, VtArray<GfVec3f>& results,
+  size_t GetPoints(Particles* particles, VtArray<GfVec3f>& results,
     VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
 
   void Reset(Particles* particles) override;
@@ -206,7 +206,7 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, VtArray<GfVec3f>& results, 
+  size_t GetPoints(Particles* particles, VtArray<GfVec3f>& results, 
     VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
 
   void SolvePosition(Particles* particles, float dt) override;
@@ -230,7 +230,7 @@ public:
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, VtArray<GfVec3f>& results,
+  size_t GetPoints(Particles* particles, VtArray<GfVec3f>& results,
     VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
 
   void SolvePosition(Particles* particles, float dt) override;
@@ -266,7 +266,7 @@ public:
 
   Collision* GetCollision() {return _collision;};
   const Collision* GetCollision() const { return _collision; };
-  void GetPoints(Particles* particles, VtArray<GfVec3f>& results,
+  size_t GetPoints(Particles* particles, VtArray<GfVec3f>& results,
     VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
 
   void SolvePosition(Particles* particles, float dt) override;
@@ -299,13 +299,13 @@ protected:
 class ContactConstraint : public Constraint
 {
 public:
-  ContactConstraint(Body* body, const VtArray<int>& elems, Collision* collision, 
-    const VtArray<Contact*>& contact, float stiffness=0.f, float damping=0.f);
+  ContactConstraint(Body* body, Collision* collision, const VtArray<int>& elems, 
+    float stiffness=0.f, float damping=0.f);
 
   size_t GetTypeId() const override { return TYPE_ID; };
   size_t GetElementSize() const override { return ELEM_SIZE; };
 
-  void GetPoints(Particles* particles, VtArray<GfVec3f>& results,
+  size_t GetPoints(Particles* particles, VtArray<GfVec3f>& results,
     VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
 
   void SolvePosition(Particles* particles, float dt) override;
@@ -315,7 +315,6 @@ public:
 
 protected:
   static size_t                 TYPE_ID;
-  VtArray<Contact>              _contacts;
   Collision*                    _collision;
 };
 

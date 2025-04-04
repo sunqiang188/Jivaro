@@ -80,18 +80,13 @@ public:
   void GetConstraintsByType(short type, std::vector<Constraint*>& results);
   void UpdateConstraintsDisplay();
   void ClearConstraintsDisplay();
-
-  // contacts
-  void AddContact(Constraint* contact) { _contacts.push_back(contact); };
-  Constraint* GetContact(size_t idx) { return _contacts[idx]; };
-  void GetContactByType(short type, std::vector<Constraint*>& results);
+  //void BuildIntersectionConstraints();
+  //void BuildContactConstraints();
 
   // collisions
   std::vector<Collision*> GetCollisions(){return _collisions;};
   void AddCollision(Collision* collision);
-  Collision* GetCollision(size_t idx = 0) { return _collisions[idx]; };
-  std::vector<Constraint*>& GetContacts() { return _contacts; };
-  const std::vector<Constraint*>& GetContacts() const { return _contacts; };
+  Collision* GetCollision(size_t idx = 0) { return _collisions[idx];};
 
   // particles
   Particles* GetParticles() { return &_particles; };
@@ -123,10 +118,9 @@ public:
   const _ElementMap& GetElements(){return _elements;};
 
 private:
-  void _ResetContacts();
+  void _ResetCounter(const std::vector<Constraint*>& constraints, size_t c);
   void _PrepareContacts();
   void _UpdateContacts(float t);
-  void _StoreLastContacts();
 
   void _SolveConstraints(std::vector<Constraint*>& constraints);
   void _SolveVelocities(std::vector<Constraint*>& constraints);
@@ -145,9 +139,8 @@ private:
 
   // system
   Particles                           _particles;
-  std::vector<Constraint*>            _constraints; // static
-  std::vector<Constraint*>            _contacts;    // dynamic
-  std::vector<Constraint*>            _lastContacts;// dynamic
+  std::vector<Constraint*>            _constraints;
+  std::vector<Constraint*>            _contacts;    
   std::vector<Collision*>             _collisions;
   Collision*                          _selfCollisions;
   std::vector<Body*>                  _bodies;

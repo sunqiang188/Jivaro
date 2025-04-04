@@ -89,12 +89,10 @@ void Solver::AddElement(Element* element, Geometry* geom, const SdfPath& path)
   _elements[element] = std::make_pair(path, geom);
   switch(element->GetType()) {
     case Element::COLLISION:
+    {
       AddCollision((Collision*)element);
       break;
-
-    case Element::CONTACT:
-      AddContact((Constraint*)element);
-      break;
+    }
 
     case Element::CONSTRAINT:
       AddConstraint((Constraint*)element);
@@ -338,10 +336,11 @@ void Solver::UpdateConstraintsDisplay()
  size_t numContacts = _contacts.size();
 
   for(size_t c = 0; c < numContacts; ++c) {
+    if(_contacts[c]->GetTypeId() != Constraint::COLLISION) continue;
     if(((CollisionConstraint*)_contacts[c])->GetCollision()->GetTypeId() == Collision::SELF)continue;
-    _contacts[c]->GetPoints(&_particles, positions, widths, colors);
+    size_t d = _contacts[c]->GetPoints(&_particles, positions, widths, colors);
 
-    for(size_t d = 0; d < _contacts[c]->GetNumElements(); ++d)
+    for(size_t e = 0; e < d; ++e)
       counts.push_back(2);
   }
 
@@ -382,29 +381,29 @@ void Solver::WeightBoundaries(Body* body)
   }
 }
 
-void Solver::_ResetContacts()
+void Solver::_ResetCounter(const std::vector<Constraint*>& constraints, size_t c)
 {
-  for (auto& contact: _contacts)
-    delete contact;
-  _contacts.clear();
-  for(Collision* collision: _collisions)
-    collision->Init(&_particles, _bodies, _contacts);
+  GfVec2f* counter = &_particles.counter[0];
+  for (size_t p=0; p< _particles.GetNumParticles(); ++p)
+    counter[p][c] = 0.f;
+
+  for (auto& constraint : constraints)
+    for (auto& elem : constraint->GetElements())
+      counter[elem][c]+=1.f;
 }
 
 void Solver::_PrepareContacts()
 {
   _timer->Start(0);
   for (auto& collision : _collisions)
-    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+    collision->FindContacts(&_particles, _frameTime);
 
   if(_selfCollisions)
-    _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
+    _selfCollisions->FindContacts(&_particles, _frameTime);
 
-  _particles.ResetCounter(_contacts, 1);
+  _ResetCounter(_contacts, 1);
   _timer->Stop();
 }
-
-
 
 void Solver::_UpdateContacts(float t)
 {
@@ -413,20 +412,6 @@ void Solver::_UpdateContacts(float t)
 
   if(_selfCollisions)
     _selfCollisions->UpdateContacts(&_particles, t);
-}
-
-void Solver::_StoreLastContacts()
-{
-  for(auto& contact: _lastContacts)
-    delete contact;
-  _lastContacts.clear();
-
-  for(Constraint* constraint: _contacts)
-  {
-    CollisionConstraint* collisionConstraint = (CollisionConstraint*)constraint;
-    Collision*  collision = collisionConstraint->GetCollision();
-    collision->CreateContactConstraints(&_particles, _bodies, _lastContacts);
-  }
 }
 
 void Solver::_IntegrateParticles(size_t begin, size_t end)
@@ -452,7 +437,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
     previous[index] = position[index];
     position[index] = predicted[index];
-    predicted[index] = position[index] + velocity[index] * _stepTime;
+    predicted[index] = previous[index] + velocity[index] * _stepTime;
 
     colors[index] = RandomColorByIndex(index);
   }
@@ -474,10 +459,9 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   const double velDecay = std::exp(std::log(0.95f) * _stepTime);
 
   for(size_t index = begin; index < end; ++index) {
-    //if (state[index] != Particles::ACTIVE)continue;
+    if (state[index] != Particles::ACTIVE)continue;
     
     // update velocity
-    //previous[index] = velocity[index];
     velocity[index] = (predicted[index] - position[index]) * invDt; 
     velocity[index] *= velDecay;
 
@@ -559,7 +543,6 @@ void Solver::Reset(UsdStageRefPtr& stage)
   UpdateCollisions(stage, _startTime);
 
   // reset
-  _ResetContacts();
   _particles.RemoveAllBodies();
 
   for (size_t b = 0; b < _bodies.size(); ++b) {
@@ -567,7 +550,7 @@ void Solver::Reset(UsdStageRefPtr& stage)
     _particles.AddBody(_bodies[b], matrix);
   }
 
-  _particles.ResetCounter(_constraints, 0);
+  _ResetCounter(_constraints, 0);
   
   size_t nL = 5;
   for (size_t b = 0; b < _bodies.size(); ++b) {
@@ -592,6 +575,14 @@ void Solver::Reset(UsdStageRefPtr& stage)
 
   _particles.SetAllState(Particles::ACTIVE);
 
+  for (auto& contact: _contacts)
+    delete contact;
+  _contacts.clear();
+
+  for(Collision* collision: _collisions) {
+    collision->Init(&_particles, _bodies, _contacts);
+  }
+
   if(_selfCollisions)delete _selfCollisions;
   _selfCollisions = new SelfCollision(&_particles, 
     GetPrim().GetPath().AppendProperty(TfToken("selfCollide")), 0.5f, 0.5f);
@@ -610,27 +601,23 @@ void Solver::Reset(UsdStageRefPtr& stage)
 
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
-  //_StoreLastContacts();
+
+  const size_t numParticles = _particles.GetNumParticles();
+  
+  if (!numParticles)return;
+
+  const size_t numThreads = WorkGetConcurrencyLimit();
+  const size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
+  const float stepTime = 1.f / static_cast<float>(_subSteps - 1);
 
   UpdateInputs(stage, time);
   UpdateParameters(stage, time);
   UpdateCollisions(stage, time);
 
-  const size_t numParticles = _particles.GetNumParticles();
-  const float stepTime = 1.f / static_cast<float>(_subSteps - 1);
-  if (!numParticles)return;
-
-  size_t numThreads = WorkGetConcurrencyLimit();
-
-  size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
-  
-  //_SolveConstraints(_lastContacts);
-  //_SolveVelocities(_lastContacts);
-
   _PrepareContacts();
 
+
   for(size_t si = 0; si < _subSteps; ++si) {
-    _UpdateContacts(si * stepTime);
 
     _timer->Start(1);
     // integrate particles
@@ -645,10 +632,9 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
 
     // solve and apply contacts
     _timer->Next();
+    _UpdateContacts(si * stepTime);
     _SolveConstraints(_contacts);
-    //_SolveConstraints(_lastContacts);
   
-
     _timer->Next();
 
     // update particles
@@ -658,7 +644,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
         std::placeholders::_1, std::placeholders::_2), packetSize);
     _timer->Stop();
 
-    //_SolveVelocities(_contacts);
+    _SolveVelocities(_contacts);
 
   }
   

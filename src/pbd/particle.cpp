@@ -145,15 +145,6 @@ void Particles::SetBodyState(Body* item, short s)
   }
 }
 
-void Particles::ResetCounter(const std::vector<Constraint*>& constraints, size_t c)
-{
-  for (size_t p=0; p< num; ++p)counter[p][c] = 0.f;
-
-  for (auto& constraint : constraints)
-    for (auto& elem : constraint->GetElements())
-      counter[elem][c]+=1.f;
-}
-
 Body::~Body()
 {
   for (auto& constraint : _constraints)

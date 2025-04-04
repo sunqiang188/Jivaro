@@ -12,13 +12,14 @@ JVR_NAMESPACE_OPEN_SCOPE
 
 void Contact::Init(Collision* collision, Particles* particles, size_t index)
 {
-
+  /*
   if(IsValid() && collision->GetTypeId() == Collision::MESH) {
     Mesh* mesh = (Mesh*)collision->GetGeometry();
     const Triangle* triangle = mesh->GetTriangle(GetComponentIndex());
     SetPoint(ComputeInterpolatedPosition(mesh->GetPositionsCPtr(), 
       mesh->GetPreviousCPtr(), 0.f, &triangle->vertices[0], 3, &mesh->GetMatrix()));
   }
+  */
   
   _normal = collision->GetGradient(particles, index);
   _initDepth = collision->GetValue(particles, index);
@@ -29,29 +30,30 @@ void Contact::Init(Collision* collision, Particles* particles, size_t index)
     _velocity = collision->GetVelocity(particles, index);
   else
     _velocity = ((SelfCollision*)collision)->GetVelocity(particles, index, GetComponentIndex());
-  _rotationAlongFrame = GfRotation();
-  _active = true;
-  _touching = false;
-  
-  
+  _state = _depth < collision->GetMargin() ? ACTIVE : DISCARD;
+  if(_depth < 0.f)_state = TOUCHING;
   
 }
 
 void Contact::Update(Collision* collision, Particles* particles, size_t index)
 {
- 
+  if(!IsActive())return;
+  /*
   if(IsValid() && collision->GetTypeId() == Collision::MESH) {
     Mesh* mesh = (Mesh*)collision->GetGeometry();
     const Triangle* triangle = mesh->GetTriangle(GetComponentIndex());
     SetPoint(ComputeInterpolatedPosition(mesh->GetPositionsCPtr(), 
       mesh->GetPreviousCPtr(), collision->GetStepTime(), &triangle->vertices[0], 3, &mesh->GetMatrix()));
   }
+  */
   
   _normal = collision->GetGradient(particles, index);
   _depth = collision->GetValue(particles, index);
+  if(_depth < 0.f)_state = TOUCHING;
+  else _state = ACTIVE;
 
-/*
-   if(collision->GetTypeId() != Collision::SELF) 
+  
+  if(collision->GetTypeId() != Collision::SELF) 
     _velocity = collision->GetVelocity(particles, index);
   else
     _velocity = ((SelfCollision*)collision)->GetVelocity(particles, index, GetComponentIndex());
@@ -86,6 +88,9 @@ void Contacts::ResetUsed(size_t index)
 void 
 Contacts::ResetAllUsed() { 
   memset(&used[0], 0, n * sizeof(int));
+  Contact contact;
+  for(size_t i = 0; i < m * n; ++i)
+    data[i] = contact;
 };
 
 Contact* 

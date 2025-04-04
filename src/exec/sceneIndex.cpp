@@ -71,16 +71,18 @@ _GetPointsSceneIndexPrim(Points* points)
             .SetInterpolation(
               HdPrimvarSchema::BuildInterpolationDataSource(
                 HdPrimvarSchemaTokens->varying))
-            .Build())/*,
+            .Build(),
           HdTokens->displayColor,
           HdPrimvarSchema::Builder()
-            .SetPrimvarValue(_PointDataSource::New(colors))
+            .SetPrimvarValue(
+              HdRetainedTypedSampledDataSource<VtVec3fArray>::New(
+                points->GetColors()))
             .SetInterpolation(
               HdPrimvarSchema::BuildInterpolationDataSource(
                 HdPrimvarSchemaTokens->vertex))
             .SetRole(HdPrimvarSchema::BuildRoleDataSource(
               HdPrimvarSchemaTokens->color))
-            .Build()),
+            .Build())/*,
         HdPurposeSchemaTokens->purpose,
         HdPurposeSchema::Builder()
           .SetPurpose(

@@ -44,7 +44,8 @@ public:
     : Mask(Element::COLLISION)
     , _collider(collider)
     , _restitution(restitution)
-    , _friction(friction){};
+    , _friction(friction)
+    , _flip(false){};
 
   /*
   void AddBody(Particles* particles, Body* body);
@@ -56,9 +57,7 @@ public:
   virtual void Init(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints);
   virtual void Update(const UsdPrim& prim, double time);
-  virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies,
-    std::vector<Constraint*>& constraints, float ft);
-  virtual void StoreContactsLocation(Particles* particles, int* elements, size_t n);
+  virtual void FindContacts(Particles* particles, float ft);
   virtual void UpdateContacts(Particles* particles, float t);
 
   virtual void CreateContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
@@ -67,7 +66,6 @@ public:
   virtual Geometry* GetGeometry(){return _collider;};
 
   virtual size_t GetContactComponent(size_t index, size_t c=0) const;
-  virtual GfVec3f GetContactPosition(size_t index, size_t c=0) const;
   virtual GfVec3f GetContactNormal(size_t index, size_t c=0) const;
   virtual GfVec3f GetContactVelocity(size_t index, size_t c=0) const;
   virtual float GetContactDepth(size_t index, size_t c=0) const;
@@ -82,6 +80,7 @@ public:
   virtual bool IsContactActive(size_t index, size_t c=0) const;
 
   Contacts& GetContacts(){return _contacts;};
+  
   size_t GetNumContacts(size_t index){return _contacts.GetNumUsed(index);};
   size_t GetTotalNumContacts(){return _contacts.GetTotalNumUsed();};
 
@@ -118,10 +117,10 @@ protected:
   virtual void _UpdateContacts(Particles* particles, size_t begin, size_t end);
   
   virtual void _FindContact(Particles* particles, size_t index, float ft) = 0; // pure virtual
-  virtual void _StoreContactLocation(Particles* particles, int elem, Contact* contact);
 
   size_t                            _numParticles;
   Contacts                          _contacts;
+  bool                              _flip;
 
   bool                              _enabled;
   float                             _restitution;
@@ -257,12 +256,10 @@ protected:
   void _CreateAccelerationStructure();
   void _UpdateAccelerationStructure();
   void _FindContact(Particles* particles, size_t index, float ft) override;  
-  void _StoreContactLocation(Particles* particles, int index, Contact* contact) override;
 
 private:
   static size_t                 TYPE_ID;
   BVH                           _bvh;
-  std::vector<Location>         _closest;
 };
 
 class SelfCollision : public Collision
@@ -288,8 +285,7 @@ public:
 
   void Update(const UsdPrim& prim, double time) override;
 
-  void FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
-    std::vector<Constraint*>& constraints, float ft)override;
+  void FindContacts(Particles* particles, float ft)override;
 
 protected:
   void _UpdateParameters( const UsdPrim& prim, double time) override;
@@ -298,7 +294,6 @@ protected:
   void _FindContacts(Particles* particles, size_t begin, size_t end, float ft) override;
   void _UpdateContacts(Particles* particles, size_t begin, size_t end) override;
   void _FindContact(Particles* particles, size_t index, float ft) override;
-  void _StoreContactLocation(Particles* particles, int index, int other, Contact* contact);
 
   void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints)override;
