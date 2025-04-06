@@ -25,7 +25,6 @@ const float Collision::TOLERANCE_MARGIN = 0.01f;
 
 void Collision::Reset()
 {
-  _flip = false;
   _contacts.ResetAllUsed();
 }
 
@@ -77,6 +76,8 @@ void Collision::GetVelocities(Particles* particles, VtArray<GfVec3f>& points,
 void Collision::UpdateContacts(Particles* particles, float t)
 {
   _t = t;
+  _matrix = InterpolateMatrices(_collider->GetPreviousMatrix(), _collider->GetMatrix(), _t);
+  //_invMatrix = _matrix.GetInverse();
   WorkParallelForN(
       particles->GetNumParticles(),
       std::bind(&Collision::_UpdateContacts, this, particles, 
@@ -94,6 +95,7 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
 void Collision::FindContacts(Particles* particles, float ft)
 {
   if(!_enabled)return; 
+
   WorkParallelForN(particles->GetNumParticles(),
     std::bind(&Collision::_FindContacts, this, particles,
       std::placeholders::_1, std::placeholders::_2, ft), PACKET_SIZE);
@@ -104,7 +106,12 @@ void Collision::_FindContacts(Particles* particles, size_t begin, size_t end, fl
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     Contact* contact = _contacts.Get(index);
-    //if(!contact->IsTouching() || (contact->GetPoint() - particles->position[index]).GetLength() > _margin)
+    /*
+    if(contact->IsTouching() && GetTypeId() == Collision::MESH) {
+      Mesh* mesh = (Mesh*)_collider;
+      particles->position[index] = contact->ComputeInterpolatedPosition(mesh->GetPositionsCPtr(), mesh->Get)
+    }
+    */
     _FindContact(particles, index, ft);
   }
 }
@@ -222,13 +229,14 @@ Collision::CreateContactConstraints(Particles* particles, const std::vector<Body
 void Collision::Init(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints) 
 {
+  _matrix = _collider->GetMatrix();
+
   std::cout << "Collision INITIALIZE : " << this << ":" << particles->GetNumParticles() << std::endl;
   _contacts.Resize(particles->GetNumParticles(), 1);
   _contacts.ResetAllUsed();
 
   _BuildContacts(particles, bodies, constraints);
   std::cout << "created  : " << constraints.size() << " constraints " << std::endl;
-
 }
 
 
@@ -443,7 +451,7 @@ GfVec3f BoxCollision::GetGradient(Particles* particles, size_t index)
 {
   const GfVec3f local(_collider->GetInverseMatrix().Transform(particles->predicted[index]));
 
-  const GfVec3f closest = _PointOnBox(local, _size, _collider->GetMatrix());
+  const GfVec3f closest = _PointOnBox(local, _size, _matrix);
 
   return (particles->predicted[index] - closest).GetNormalized();
 }
@@ -574,7 +582,7 @@ GfVec3f CapsuleCollision::GetGradient(Particles* particles, size_t index)
   const GfVec3f closest = _PointOnCapsuleSegment(local, capsule->GetAxis(), capsule->GetHeight());
 
   const GfVec3f surface = closest + (local - closest).GetNormalized() * _radius;
-  GfVec3f world(_collider->GetMatrix().Transform(surface));
+  GfVec3f world(_matrix.Transform(surface));
 
   if((local - closest).GetLengthSq() < _radius * _radius)
     return (world - particles->predicted[index]).GetNormalized();
@@ -602,6 +610,8 @@ MeshCollision::~MeshCollision()
 void MeshCollision::Init(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints)
 {
+  _matrix = _collider->GetMatrix();
+
   size_t numParticles = particles->GetNumParticles();
   std::cout << "Mesh Collision INITIALIZE : " << numParticles << std::endl;
 
@@ -647,10 +657,10 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
     const Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
 
     const GfVec3f position = 
-      contact->ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
+      contact->ComputePosition(positions, &triangle->vertices[0], 3, &_matrix);
 
     const GfVec3f normal = 
-      contact->ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
+      contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_matrix);
 
     const GfVec3f delta = predicted - position;
     contact->SetActive(GfDot(delta, normal) < 0.f || delta.GetLength() < maxDistance);
@@ -670,12 +680,12 @@ MeshCollision::GetValue(Particles* particles, size_t index)
   const Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
 
   const GfVec3f position = 
-    contact->ComputeInterpolatedPosition(positions, previous, _t, &triangle->vertices[0], 3, &mesh->GetMatrix());
-    //contact->ComputePosition(positions, &triangle->vertices[0], 3, &mesh->GetMatrix());
+    //contact->ComputeInterpolatedPosition(positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
+    contact->ComputePosition(positions, &triangle->vertices[0], 3, &_matrix);
 
   const GfVec3f normal = 
-    contact->ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &mesh->GetMatrix());
-    //contact->ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
+    //contact->ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
+    contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_matrix);
 
   return GfDot(particles->predicted[index] - position, normal)  - particles->radius[index];
 
@@ -692,8 +702,8 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
   const GfVec3f* normals = mesh->GetNormalsCPtr();
   const Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
   
-  return contact->ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &mesh->GetMatrix());
-  //return contact->ComputeNormal(normals, &triangle->vertices[0], 3, &mesh->GetMatrix());
+  //return contact->ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
+  return contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_matrix);
 }
 
 
@@ -703,6 +713,13 @@ MeshCollision::GetVelocity(Particles* particles, size_t index)
   Contact* contact = _contacts.Get(index);
   if(!contact->IsValid())return GfVec3f(0.f);
   Mesh* mesh = (Mesh*)GetGeometry();
+
+  const GfVec3f* positions = mesh->GetPositionsCPtr();
+  const GfVec3f* previous = mesh->GetPreviousCPtr();
+  Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
+
+  //return contact->ComputeVelocity(positions, previous,
+  //  &triangle->vertices[0], 3, &_matrix) / Geometry::FrameDuration;
 
   const GfVec3f torque = _collider->GetTorque();
   const GfVec3f tangent = (GetGradient(particles, index) ^ torque).GetNormalized();
@@ -739,9 +756,9 @@ MeshCollision::GetNormals(Particles* particles, VtArray<GfVec3f>& points,
     if(contact->IsValid()) {
       Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
       const GfVec3f position =
-        contact->ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &mesh->GetMatrix());
+        contact->ComputePosition(mesh->GetPositionsCPtr(), &triangle->vertices[0], 3, &_matrix);
       const GfVec3f normal =
-        contact->ComputeNormal(mesh->GetNormalsCPtr(), &triangle->vertices[0], 3, &mesh->GetMatrix());
+        contact->ComputeNormal(mesh->GetNormalsCPtr(), &triangle->vertices[0], 3, &_matrix);
 
       points.push_back(position);
       points.push_back(position + normal);
@@ -779,10 +796,10 @@ MeshCollision::GetVelocities(Particles* particles, VtArray<GfVec3f>& points,
         counts.push_back(2);
       } else {
         Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
-        const GfVec3f velocity(mesh->GetMatrix().TransformDir(
+        const GfVec3f velocity(_matrix.TransformDir(
           triangle->GetVelocity(mesh->GetPositionsCPtr(), mesh->GetPreviousCPtr())));
         const GfVec3f position(contact->ComputePosition(mesh->GetPositionsCPtr(), 
-          &triangle->vertices[0], 3, &mesh->GetMatrix()));
+          &triangle->vertices[0], 3, &_matrix));
 
         points.push_back(position);
         points.push_back(position + velocity);

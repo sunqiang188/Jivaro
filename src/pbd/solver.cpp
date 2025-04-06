@@ -301,7 +301,6 @@ void Solver::UpdatePointsDisplay()
     _points->SetWidths(&widths[0], numPoints);
     _points->SetColors(&colors[0], numPoints);
 
-
     _scene->MarkPrimDirty(_pointsId, HdChangeTracker::AllDirty);
   }
 }
@@ -435,9 +434,7 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
 
     if(_particles.state[index] != Particles::ACTIVE)continue;
 
-    previous[index] = position[index];
-    position[index] = predicted[index];
-    predicted[index] = previous[index] + velocity[index] * _stepTime;
+    predicted[index] = position[index] + velocity[index] * _stepTime;
 
     colors[index] = RandomColorByIndex(index);
   }
@@ -473,6 +470,8 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
     } else if(vL > vMax) {
       velocity[index] = velocity[index].GetNormalized() * vMax;
     }
+
+    previous[index] = position[index];
     
     // update position
     if (mass[index] == 0.f)
@@ -615,7 +614,6 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   UpdateCollisions(stage, time);
 
   _PrepareContacts();
-
 
   for(size_t si = 0; si < _subSteps; ++si) {
 

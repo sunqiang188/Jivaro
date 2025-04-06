@@ -39,7 +39,6 @@ void ExtractRotation(const GfMatrix3d &A, GfQuaternion &q,
 
 GfMatrix4d InterpolateMatrices(const GfMatrix4d& m0, const GfMatrix4d& m1, float t)
 {
-  
   GfVec3f s0(
     GfVec3f(m0[0][0], m0[1][0], m0[2][0]).GetLength(),
     GfVec3f(m0[0][1], m0[1][1], m0[2][1]).GetLength(),
@@ -50,13 +49,16 @@ GfMatrix4d InterpolateMatrices(const GfMatrix4d& m0, const GfMatrix4d& m1, float
     GfVec3f(m1[0][1], m1[1][1], m1[2][1]).GetLength(),
     GfVec3f(m1[0][2], m1[1][2], m1[2][2]).GetLength());
 
+  GfRotation rotation = GfRotation(GfSlerp(t, m0.ExtractRotationQuat(), m1.ExtractRotationQuat()));
+
   const GfTransform interpolated(
-    s0 * t + s1 * (1 - t),                                                // interpolated scale
+    GfSlerp(t, s0, s1),                                              // interpolated scale
     GfRotation(),                                                    // pivot orientation
-    m0.ExtractRotation() * t * m1.ExtractRotation() * (1 - t),            // interpolated rotation
+    rotation,                                                        // interpolated rotation
     GfVec3d(0.f),                                                    // pivot position
-    m0.ExtractTranslation() * t + m1.ExtractTranslation() * (1 - t)       // interpolated translation
+    GfSlerp(t, m0.ExtractTranslation(), m1.ExtractTranslation())     // interpolated translation
   );
+  
   return interpolated.GetMatrix();
 }
 

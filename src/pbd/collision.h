@@ -44,8 +44,7 @@ public:
     : Mask(Element::COLLISION)
     , _collider(collider)
     , _restitution(restitution)
-    , _friction(friction)
-    , _flip(false){};
+    , _friction(friction){};
 
   /*
   void AddBody(Particles* particles, Body* body);
@@ -120,7 +119,6 @@ protected:
 
   size_t                            _numParticles;
   Contacts                          _contacts;
-  bool                              _flip;
 
   bool                              _enabled;
   float                             _restitution;
@@ -132,6 +130,8 @@ protected:
   float                             _t;
   Geometry*                         _collider;
   TfToken                           _key;
+
+  GfMatrix4d                        _matrix;
 
 };
 

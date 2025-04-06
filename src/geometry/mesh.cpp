@@ -701,11 +701,7 @@ Mesh::_Sync(const GfMatrix4d& matrix, const UsdTimeCode& time)
   if(_prim.IsValid() && _prim.IsA<UsdGeomMesh>())
   {
     UsdGeomMesh usdMesh(_prim);
-    if(_previous.size() == _positions.size())
-      memcpy(&_previous[0], &_positions[0], _positions.size() * sizeof(GfVec3f));
-    else
-      usdMesh.GetPointsAttr().Get(&_previous, time);
-
+    _previous = _positions;
     usdMesh.GetPointsAttr().Get(&_positions, time);
 
     // recompute normals if needed

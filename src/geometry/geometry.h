@@ -142,8 +142,8 @@ protected:
 
   // bounding box
   GfMatrix4d                     _matrix;
-  GfMatrix4d                     _prevMatrix;
   GfMatrix4d                     _invMatrix;
+  GfMatrix4d                     _prevMatrix;
   GfVec3f                        _velocity;  // positional velocity
   GfVec3f                        _torque;    // rotational velocity
   GfBBox3d                       _bbox;

@@ -73,6 +73,7 @@ Triangle::GetVelocity(const GfVec3f* positions, const GfVec3f* previous) const
   const GfVec3f deltaP(curPos - prevPos);
   GfVec3f velocity = GfVec3f(deltaP) / Geometry::FrameDuration;
 
+
   const GfQuatf deltaR = GetRotationBetweenVectors(prevNormal, curNormal);
   
   const GfVec3f torque = GfVec3f(deltaR.GetImaginary() * (deltaR.GetReal() / Geometry::FrameDuration));

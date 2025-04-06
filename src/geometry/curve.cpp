@@ -230,7 +230,6 @@ Curve::_Sync( const GfMatrix4d& matrix, const UsdTimeCode& time)
   {
     _previous = _positions;
     UsdGeomBasisCurves usdCurve(_prim);
-    const size_t nbPositions = _positions.size();
     usdCurve.GetPointsAttr().Get(&_positions, time);
   }
   return Geometry::DirtyState::DEFORM;

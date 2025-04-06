@@ -55,7 +55,7 @@ Location::ComputeVelocity(const GfVec3f* positions, const GfVec3f* previous,
   else
     result += positions[_compId] - previous[_compId];
 
-  if(m)return GfVec3f(m->TransformDir(result));
+  if(m)return GfVec3f(m->Transform(result));
   else return result;
 }
 

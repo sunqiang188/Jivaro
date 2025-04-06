@@ -966,26 +966,22 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
     particles->color[index] = GfVec3f(0.75, 0.75, 0.5);
 
-    _correction[elem] = -d * normal;
+    //_correction[elem] = -d * normal;
     
     
     //float lambdaN = -d / (particles->invMass[index] + alpha);
     //_correction[elem] = lambdaN * normal * particles->invMass[index];
     
-    /*
-    float lambdaN = -d * particles->mass[index];
-    _correction[elem] += lambdaN * normal;
     
-
+    float lambdaN = -d / (particles->invMass[index] + alpha);
+    _correction[elem] += lambdaN * normal * particles->invMass[index];
+    
     GfVec3f deltaP = ((particles->predicted[index] + _correction[elem]) - particles->previous[index]) - _collision->GetContactVelocity(index) * dt;
     GfVec3f deltaPt = deltaP - GfDot(deltaP, normal) * normal;
     float lambdaT = deltaPt.GetLength() ;
 
     if(lambdaT  < _collision->GetFriction() * lambdaN)
       _correction[elem] -= deltaPt;
-    */
-    
-    
   }
 
   /*
@@ -1028,10 +1024,9 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 {
-
+  return;
   _ResetCorrection(); 
   const size_t numElements = _elements.size();
-  float invDt = 1.f / (dt * dt);
 
   for (size_t elem = 0; elem < numElements; ++elem) {
     const size_t index = _elements[elem];
@@ -1041,10 +1036,11 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
     GfVec3f vel = particles->velocity[index] - _collision->GetContactVelocity(index);
 
     GfVec3f normal = _collision->GetContactNormal (index);
-    GfVec3f vT = vel - GfDot(vel, normal) * normal;
-    
-    _correction[elem] = -GfMin(_collision->GetFriction() * GfAbs(_collision->GetContactDepth(index) * invDt) * particles->invMass[index],
+    GfVec3f vT = particles->velocity[index] - GfDot(particles->velocity[index], normal) * normal;
+
+    _correction[elem] = -GfMin(_collision->GetFriction() * GfAbs(_collision->GetContactDepth(index) / dt) * particles->invMass[index],
       vT.GetLength()) * vT.GetNormalized();
+
 
   }
   
@@ -1163,8 +1159,8 @@ size_t CollisionConstraint::GetPoints(Particles* particles, VtArray<GfVec3f>& po
     numUsedElements++;
     const GfVec3f position = particles->predicted[_elements[elem]];
     positions.push_back(position);
-    //positions.push_back(position + _collision->GetContactVelocity(_elements[elem]));
-    positions.push_back(position + _collision->GetContactNormal(_elements[elem]));
+    positions.push_back(position + _collision->GetContactVelocity(_elements[elem]));
+    //positions.push_back(position + _collision->GetContactNormal(_elements[elem]));
     radius.push_back(0.05f);
     radius.push_back(0.05f);
     colors.push_back(_color);
