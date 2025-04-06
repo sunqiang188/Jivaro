@@ -105,13 +105,14 @@ Application::Update()
     glfwWaitEvents();
 
   // update model
-  if (!WindowRegistry::GetPopup() && (playback > Time::PLAYBACK_IDLE || WindowRegistry::IsToolInteracting())) {
+  if (!WindowRegistry::GetPopup() && (playback > Time::PLAYBACK_IDLE || currentTime != _lastTime || WindowRegistry::IsToolInteracting())) {
     if(_index->GetExec() ) 
       _index->UpdateExec(currentTime);
 
     _index->Update(currentTime);
     WindowRegistry::SetAllWindowsDirty();
   }
+  _lastTime = currentTime;
 
   if(!WindowRegistry::Update())
     return false;
