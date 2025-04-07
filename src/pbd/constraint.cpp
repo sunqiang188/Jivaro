@@ -1033,7 +1033,7 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 
     if(!_collision->IsContactTouching(index)) continue;
 
-    GfVec3f vel = particles->velocity[index] - _collision->GetContactVelocity(index);
+    GfVec3f vel = particles->velocity[index] / dt - _collision->GetContactVelocity(index);
 
     GfVec3f normal = _collision->GetContactNormal (index);
     GfVec3f vT = particles->velocity[index] - GfDot(particles->velocity[index], normal) * normal;

@@ -43,6 +43,7 @@ static Voxels* _Voxelize(Mesh* mesh, float radius)
   voxels->Trace(2);
   voxels->Build(0.0f);
 
+  std::cout << "VOXELIZE : " << voxels->GetNumPoints() << " voxels.." << std::endl;
   return voxels;
 }
 

@@ -653,7 +653,7 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   GfRay ray(particles->predicted[index], particles->velocity[index] * ft);
   if(_bvh.Raycast(ray, contact, maxDistance)) {
     contact->SetActive(true);
-  } else if(_bvh.Closest(predicted, contact, FLT_MAX)) {
+  } else if(_bvh.Closest(predicted, contact, maxDistance)) {
     const Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
 
     const GfVec3f position = 
@@ -881,13 +881,9 @@ void SelfCollision::Update(const UsdPrim& prim, double time)
 void SelfCollision::FindContacts(Particles* particles, float ft)
 {
   //if(!_neighborsInitialized)_ComputeNeighbors(bodies);
-  std::cout << "self collision find contacts" << std::endl;
   WorkParallelForN(particles->GetNumParticles(),
     std::bind(&SelfCollision::_FindContacts, this, particles,
-      std::placeholders::_1, std::placeholders::_2, ft), PACKET_SIZE);
-  std::cout << "self collision find contacts DONE" << std::endl;
-  
-
+      std::placeholders::_1, std::placeholders::_2, ft), PACKET_SIZE);  
 }
 
 void SelfCollision::UpdateContacts(Particles* particles, float t)
