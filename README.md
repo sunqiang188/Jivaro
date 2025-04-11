@@ -3,8 +3,6 @@
 This is where I experiment with OpenUsd and software development.
 The basic idea is to add an execution system inside a Hydra 2.0 Scene Index.
 
-![UI preview of Jivaro 0](images/bTC9Mry0.gif)
-
 ![UI preview of Jivaro 1](images/NGlfc5s1.gif)
 
 ![UI preview of Jivaro 2](images/1C3Tsa1W.gif)

@@ -113,7 +113,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 1.f;
-  float radius = 0.25f;
+  float radius = 0.1f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;

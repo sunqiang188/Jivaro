@@ -1024,7 +1024,6 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 {
-  return;
   _ResetCorrection(); 
   const size_t numElements = _elements.size();
 

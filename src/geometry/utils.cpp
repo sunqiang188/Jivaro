@@ -190,7 +190,7 @@ ComputeVertexNormals( const VtArray<GfVec3f>& positions,
     int numVertices = counts[i];
     int numTriangles = numVertices - 2;
     GfVec3f n(0.f);
-    for(int j = 0; j < numTriangles; ++j)
+    for(size_t j = 0; j < numTriangles; ++j)
     {
       n += triangleNormals[base + j];
     }

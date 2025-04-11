@@ -596,11 +596,11 @@ void Solver::Reset(UsdStageRefPtr& stage)
   for(auto& collision: _collisions)
     collision->Reset();
 
+  _initialized = true;
 }
 
 void Solver::Step(UsdStageRefPtr& stage, float time)
 {
-
   const size_t numParticles = _particles.GetNumParticles();
   
   if (!numParticles)return;

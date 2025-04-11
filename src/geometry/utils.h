@@ -139,7 +139,7 @@ TriangulateDatas( const VtArray<Triangle>& triangles,
 {
   size_t numTriangles = triangles.size();
   result.resize(numTriangles * 3);
-  for(int i = 0; i < numTriangles; ++i) {
+  for(size_t i = 0; i < numTriangles; ++i) {
     const Triangle* triangle = &triangles[i];
     result[i * 3    ] = datas[triangle->vertices[0]];
     result[i * 3 + 1] = datas[triangle->vertices[1]];
