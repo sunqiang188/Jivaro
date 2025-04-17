@@ -99,6 +99,7 @@ list(APPEND USD_LIB_NAMES
   gf
   glf
   tf
+  ts
   kind
   sdf
   plug
