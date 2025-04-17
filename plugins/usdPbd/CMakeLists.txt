@@ -46,5 +46,15 @@ usd_library(usdPbd
         schema.usda
 )
 
+if(MSVC)
+    message("THIS IS MICROSOFT VISUAL STUDIO...")
+    message("${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/usdPbd.lib")
+    message("${CMAKE_CURRENT_BINARY_DIR}/usdPbd.lib")
+    add_custom_command(
+        TARGET usdPbd POST_BUILD 
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/usdPbd.lib" "${CMAKE_CURRENT_BINARY_DIR}/usdPbd.lib"
+        COMMENT "Copying ${copy_file_name} to build directory"
+)
+endif()
 
 
