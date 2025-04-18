@@ -122,7 +122,6 @@ public:
 
 
 private:
-  Solver*                                                     _solver;
   _PrimMap                                                    _prims;
   _MaterialMap                                                _materials;
   _MaterialBindingMap                                         _materialBindings;
