@@ -394,11 +394,18 @@ void Solver::_ResetCounter(const std::vector<Constraint*>& constraints, size_t c
 void Solver::_PrepareContacts()
 {
   _timer->Start(0);
+
+  for (auto& contact: _contacts)
+    delete contact;
+
+  _contacts.clear();
+
+
   for (auto& collision : _collisions)
-    collision->FindContacts(&_particles, _frameTime);
+    collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
   if(_selfCollisions)
-    _selfCollisions->FindContacts(&_particles, _frameTime);
+    _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
   _ResetCounter(_contacts, 1);
   _timer->Stop();

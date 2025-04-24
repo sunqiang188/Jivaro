@@ -92,13 +92,22 @@ void Collision::_UpdateContacts(Particles* particles, size_t begin, size_t end)
       _contacts.Get(index)->Update(this, particles, index);
 }
 
-void Collision::FindContacts(Particles* particles, float ft)
+
+void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
+  std::vector<Constraint*>& constraints, float ft)
 {
   if(!_enabled)return; 
+
+  const size_t numParticles = particles->GetNumParticles();
+
+  _contacts.Resize(numParticles, 1);
+  _contacts.ResetAllUsed();
 
   WorkParallelForN(particles->GetNumParticles(),
     std::bind(&Collision::_FindContacts, this, particles,
       std::placeholders::_1, std::placeholders::_2, ft), PACKET_SIZE);
+
+  _BuildContacts(particles, bodies, constraints);
 }
 
 void Collision::_FindContacts(Particles* particles, size_t begin, size_t end, float ft)
@@ -106,42 +115,40 @@ void Collision::_FindContacts(Particles* particles, size_t begin, size_t end, fl
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     Contact* contact = _contacts.Get(index);
-    /*
-    if(contact->IsTouching() && GetTypeId() == Collision::MESH) {
-      Mesh* mesh = (Mesh*)_collider;
-      particles->position[index] = contact->ComputeInterpolatedPosition(mesh->GetPositionsCPtr(), mesh->Get)
-    }
-    */
     _FindContact(particles, index, ft);
   }
 }
 
-
 void Collision::_BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints)
 {
-  Constraint* constraint = NULL;
+  CollisionConstraint* constraint = NULL;
+  size_t numParticles = particles->GetNumParticles();
+  size_t numBodies = bodies.size();
 
   VtArray<int> elements;
   Body* currentBody = nullptr;
-  Mask::Iterator iterator(this, 0, particles->GetNumParticles());
-  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
 
-    if (particles->body[index] != currentBody || elements.size() >= Constraint::BlockSize) {
+  Mask::Iterator iterator(this, 0, numParticles);
+  for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
+    if (_contacts.IsActive(index)) {
+      if (particles->body[index] != currentBody || elements.size() >= Constraint::BlockSize) {
       if (elements.size()) {
         constraint = new CollisionConstraint(currentBody, this, elements, _stiffness, _damp);
         constraints.push_back(constraint);
         elements.clear();
       }
       currentBody = particles->body[index];
-    } 
-    elements.push_back(index);
+      } 
+      elements.push_back(index);
+    }
   } 
-  
+
   if (elements.size()) {
     constraint = new CollisionConstraint(currentBody, this, elements);
     constraints.push_back(constraint);
   }
+
 }
 
 void 
@@ -847,12 +854,10 @@ SelfCollision::~SelfCollision()
 void SelfCollision::Init(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints) 
 {
-  std::cout << "SelfCollision INITIALIZE : " << particles->GetNumParticles() << std::endl;
   _contacts.Resize(particles->GetNumParticles(), PARTICLE_MAX_CONTACTS);
   _contacts.ResetAllUsed();
 
-  _BuildContacts(particles, bodies, constraints);
-  std::cout << "created  : " << constraints.size() << " constraints " << std::endl;
+  //_BuildContacts(particles, bodies, constraints);
 }
 
 void SelfCollision::_UpdateParameters(const UsdPrim& prim, double time)
@@ -878,7 +883,8 @@ void SelfCollision::Update(const UsdPrim& prim, double time)
 // Contacts
 //
 
-void SelfCollision::FindContacts(Particles* particles, float ft)
+void SelfCollision::FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
+  std::vector<Constraint*>& constraints, float ft)
 {
   //if(!_neighborsInitialized)_ComputeNeighbors(bodies);
   WorkParallelForN(particles->GetNumParticles(),

@@ -35,7 +35,6 @@ public:
   void Update(const float time);
 
   void AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex);
-  HdSceneIndexBaseRefPtr GetEditableSceneIndex();
 
   void SetCurrentSceneIndex(HdSceneIndexBaseRefPtr sceneIndex);
   HdSceneIndexBaseRefPtr GetFinalSceneIndex();
@@ -58,7 +57,6 @@ private:
 
   UsdStageRefPtr                    _stage;
   UsdImagingStageSceneIndexRefPtr   _stageSceneIndex;
-  HdSceneIndexBaseRefPtr            _editableSceneIndex;
   HdMergingSceneIndexRefPtr         _sceneIndexBases;
   HdMergingSceneIndexRefPtr         _finalSceneIndex;
 

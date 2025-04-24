@@ -16,8 +16,6 @@ Index::Index()
   // scene indices
   _sceneIndexBases = HdMergingSceneIndex::New();
   _finalSceneIndex = HdMergingSceneIndex::New();
-  _editableSceneIndex = _sceneIndexBases;
-  SetCurrentSceneIndex(_editableSceneIndex);
 
   UsdImagingCreateSceneIndicesInfo info;
   info.displayUnloadedPrimsWithBounds = false;
@@ -26,13 +24,14 @@ Index::Index()
   _stageSceneIndex = sceneIndices.stageSceneIndex;
 
   AddSceneIndexBase(sceneIndices.finalSceneIndex);  
+
+  SetCurrentSceneIndex(_sceneIndexBases);
 };
 
 // destructor
 //----------------------------------------------------------------------------
 Index::~Index()
 {
-  std::cout << "destroy Scene Index Execution" << _exec << std::endl;
   if(_exec) delete _exec;
 };
 
@@ -70,10 +69,14 @@ Index::InitExec()
 
   _exec->InitExec(_stage);
 
-  _execSceneIndex = ExecSceneIndex::New(_sceneIndexBases);
+  const std::vector<HdSceneIndexBaseRefPtr> inputScenes =
+    _finalSceneIndex->GetInputScenes();
+
+  _execSceneIndex = ExecSceneIndex::New(inputScenes[0]);
   _execSceneIndex->SetExec(_exec);
   SetCurrentSceneIndex(_execSceneIndex);
   _execSceneIndex->UpdateExec();
+
 }
 
 
@@ -133,18 +136,14 @@ Index::AddSceneIndexBase(HdSceneIndexBaseRefPtr sceneIndex)
   _sceneIndexBases->AddInputScene(sceneIndex, SdfPath::AbsoluteRootPath());
 }
 
-HdSceneIndexBaseRefPtr 
-Index::GetEditableSceneIndex()
-{
-  return _editableSceneIndex;
-}
-
 void 
 Index::SetCurrentSceneIndex(HdSceneIndexBaseRefPtr sceneIndex)
 {
-  if(_editableSceneIndex)
-    _finalSceneIndex->RemoveInputScene(_editableSceneIndex);
-  _editableSceneIndex = sceneIndex;
+  const std::vector<HdSceneIndexBaseRefPtr> inputScenes =
+    _finalSceneIndex->GetInputScenes();
+  if(!inputScenes.empty())
+    _finalSceneIndex->RemoveInputScene(inputScenes[0]);
+  
   _finalSceneIndex->AddInputScene(sceneIndex, SdfPath::AbsoluteRootPath());
 }
 

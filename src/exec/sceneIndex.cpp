@@ -358,7 +358,7 @@ SdfPathVector ExecSceneIndex::GetChildPrimPaths(
   if (!_isPopulated) return {};
 
   if (primPath == SdfPath::AbsoluteRootPath()) {
-    SdfPathVector paths;
+    SdfPathVector paths = _GetInputSceneIndex()->GetChildPrimPaths(primPath);
     if(_exec) {
       Scene* scene = _exec->GetScene();
       for(auto& primIt: scene->GetPrims()) {
@@ -369,9 +369,8 @@ SdfPathVector ExecSceneIndex::GetChildPrimPaths(
     }
     return paths;
   }
-
- 
-  else return {};
+  
+  return _GetInputSceneIndex()->GetChildPrimPaths(primPath);
 }
 
 void ExecSceneIndex::_PrimsAdded(

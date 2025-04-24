@@ -124,16 +124,7 @@ AttributeEditorUI::_AppendDataSourceAttrs(
 
 void AttributeEditorUI::_AppendAllPrimAttrs(SdfPath primPath)
 {
-  /*
-  HdSceneIndexPrim prim = _model->GetEditableSceneIndex()->GetPrim(primPath);
-  TfTokenVector tokens = prim.dataSource->GetNames();
 
-  if (tokens.size() < 1) return;
-
-  if (ImGui::CollapsingHeader("Prim attributes")) {
-      _AppendDataSourceAttrs(prim.dataSource);
-  }
-  */
 }
 
   

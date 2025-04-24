@@ -157,8 +157,6 @@ void ViewportUI::Init()
     _rendererNames[rendererIndex] = rendererTokens[rendererIndex].GetText();
   }
 
-  //auto editableSceneIndex = _model->GetEditableSceneIndex();
-
   Index* index = _parent->GetWindow()->GetIndex();
 
   //TfToken plugin = Engine::GetDefaultRendererPlugin();

@@ -56,7 +56,8 @@ public:
   virtual void Init(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints);
   virtual void Update(const UsdPrim& prim, double time);
-  virtual void FindContacts(Particles* particles, float ft);
+  virtual void FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
+    std::vector<Constraint*>& constraints, float ft);
   virtual void UpdateContacts(Particles* particles, float t);
 
   virtual void CreateContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
@@ -285,7 +286,8 @@ public:
 
   void Update(const UsdPrim& prim, double time) override;
 
-  void FindContacts(Particles* particles, float ft)override;
+  void FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
+    std::vector<Constraint*>& constraints, float ft)override;
 
 protected:
   void _UpdateParameters( const UsdPrim& prim, double time) override;
