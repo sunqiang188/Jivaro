@@ -117,6 +117,7 @@ enum BodyType
 struct Particles
 {
   const static size_t BLOCK_SIZE = 1024;
+  const static size_t PACKET_SIZE = 64;
   enum State {
     MUTE, 
     IDLE, 

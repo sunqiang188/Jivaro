@@ -50,6 +50,9 @@ struct _ContourAdapterComputeDatas {
   GfMatrix4d viewPointMatrix;
   UsdNprEdgeClassification classification;
 
+  bool drawSilhouette;
+  bool drawCrease;
+  bool drawBoundary;
 };
 
 typedef TfHashMap<SdfPath, UsdNprHalfEdgeMeshSharedPtr, SdfPath::Hash> 

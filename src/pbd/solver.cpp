@@ -51,8 +51,8 @@ Solver::Solver(Scene* scene, UsdPrim& prim)
   _frameTime = 1.f / Time::Get()->GetFPS();
   _stepTime = _frameTime / static_cast<float>(_subSteps);
 
-  _timer = new Timer();
-  _timer->Init("xpbd solver", NUM_TIMES, &TIME_NAMES[0]);
+  //_timer = new Timer();
+  //_timer->Init("xpbd solver", NUM_TIMES, &TIME_NAMES[0]);
 
   _pointsId = _solverId.AppendChild(TfToken("Particles"));
   _points = (Points*)_scene->AddGeometry(_pointsId, Geometry::POINT, GfMatrix4d(1.0));
@@ -81,7 +81,7 @@ Solver::~Solver()
     delete _selfCollisions;
   delete _curves;
   delete _points;
-  delete _timer;
+  //delete _timer;
 }
 
 void Solver::AddElement(Element* element, Geometry* geom, const SdfPath& path)
@@ -393,7 +393,7 @@ void Solver::_ResetCounter(const std::vector<Constraint*>& constraints, size_t c
 
 void Solver::_PrepareContacts()
 {
-  _timer->Start(0);
+  //_timer->Start(0);
 
   for (auto& contact: _contacts)
     delete contact;
@@ -408,7 +408,7 @@ void Solver::_PrepareContacts()
     _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
   _ResetCounter(_contacts, 1);
-  _timer->Stop();
+  //_timer->Stop();
 }
 
 void Solver::_UpdateContacts(float t)
@@ -612,8 +612,8 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   
   if (!numParticles)return;
 
-  const size_t numThreads = WorkGetConcurrencyLimit();
-  const size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
+  //const size_t numThreads = WorkGetConcurrencyLimit();
+  //const size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
   const float stepTime = 1.f / static_cast<float>(_subSteps - 1);
 
   UpdateInputs(stage, time);
@@ -624,37 +624,37 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
 
   for(size_t si = 0; si < _subSteps; ++si) {
 
-    _timer->Start(1);
+    //_timer->Start(1);
     // integrate particles
     WorkParallelForN(
       numParticles,
       std::bind(&Solver::_IntegrateParticles, this,
-        std::placeholders::_1, std::placeholders::_2), packetSize);
+        std::placeholders::_1, std::placeholders::_2), Particles::PACKET_SIZE);
 
-    _timer->Next();
+    //_timer->Next();
     // solve and apply constraint
     _SolveConstraints(_constraints);
 
     // solve and apply contacts
-    _timer->Next();
+    //_timer->Next();
     _UpdateContacts(si * stepTime);
     _SolveConstraints(_contacts);
   
-    _timer->Next();
+    //_timer->Next();
 
     // update particles
     WorkParallelForN(
       numParticles,
       std::bind(&Solver::_UpdateParticles, this,
-        std::placeholders::_1, std::placeholders::_2), packetSize);
-    _timer->Stop();
+        std::placeholders::_1, std::placeholders::_2), Particles::PACKET_SIZE);
+    //_timer->Stop();
 
     _SolveVelocities(_contacts);
 
   }
   
-  _timer->Update();
-  _timer->Log();
+  //_timer->Update();
+  //_timer->Log();
 }
 
 

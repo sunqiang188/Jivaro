@@ -159,9 +159,21 @@ _BuildStrokes(_ContourAdapterComputeDatas& datas)
 
   graph->Prepare(*datas.strokeParams);
   graph->ClearStrokeChains();
-  graph->BuildRawStrokes(EDGE_SILHOUETTE, GfVec3f(1.f, 0.f, 0.f));
-  graph->BuildRawStrokes(EDGE_BOUNDARY, GfVec3f(0.f, 1.f, 0.f));
-  graph->BuildRawStrokes(EDGE_CREASE, GfVec3f(0.f, 0.f, 1.f));
+
+  if(datas.strokeParams->findSilhouettes)
+    graph->BuildRawStrokes(EDGE_SILHOUETTE, GfVec3f(1.f, 0.f, 0.f));
+  else
+    std::cout << "skip draw silhouettes..." << std::endl;
+
+  if(datas.strokeParams->findBoundaries)
+    graph->BuildRawStrokes(EDGE_BOUNDARY, GfVec3f(0.f, 1.f, 0.f));
+  else
+    std::cout << "skip draw boundaries..." << std::endl;
+
+  if(datas.strokeParams->findCreases)
+    graph->BuildRawStrokes(EDGE_CREASE, GfVec3f(0.f, 0.f, 1.f));
+  else
+    std::cout << "skip draw creases..." << std::endl;
   //graph->BuildStrokeChains(EDGE_SILHOUETTE, GfVec3f(0.f, 1.f, 0.f));
 }
 
@@ -203,6 +215,15 @@ UsdImagingContourAdapter::UpdateForTime(UsdPrim const& prim,
     std::vector<_ContourAdapterComputeDatas> datas(contourSurfaces.size());
     UsdNprStrokeGraphList strokeGraphs(contourSurfaces.size());
     UsdNprStrokeParams strokeParams;
+
+
+    contour.GetDrawSilhouetteAttr().Get(&strokeParams.findSilhouettes);
+    contour.GetDrawCreaseAttr().Get(&strokeParams.findCreases);
+    contour.GetDrawBoundaryAttr().Get(&strokeParams.findBoundaries);
+    contour.GetSilhouetteWidthAttr().Get(&strokeParams.silhouetteWidth);
+    contour.GetCreaseWidthAttr().Get(&strokeParams.creaseWidth);
+    contour.GetBoundaryWidthAttr().Get(&strokeParams.boundaryWidth);
+
 
     size_t index = 0;
     for(const UsdPrim& contourSurface: contourSurfaces)
@@ -257,6 +278,14 @@ UsdImagingContourAdapter::ProcessPropertyChange(
   const TfToken& propertyName)
 {
   std::cout << "USD NPR PROCESS PROPERTY CHANGE : " << propertyName.GetText() << std::endl;
+  if (propertyName == UsdNprTokens->drawSilhouette ||
+    propertyName == UsdNprTokens->drawCrease ||
+    propertyName == UsdNprTokens->drawBoundary ||
+    propertyName == UsdNprTokens->silhouetteWidth ||
+    propertyName == UsdNprTokens->creaseWidth ||
+    propertyName == UsdNprTokens->boundaryWidth)
+      return HdChangeTracker::DirtyPrimvar;
+
   // Allow base class to handle change processing.
   return BaseAdapter::ProcessPropertyChange(prim, cachePath, propertyName);
 }

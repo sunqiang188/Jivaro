@@ -767,7 +767,6 @@ static void
 RefreshGraphCallback(GraphEditorUI* editor)
 {
   Selection* selection = editor->GetModel()->GetSelection();
-  std::cout << "num slected nodes " << selection->GetNumSelectedItems() << std::endl;
 
   if (selection->GetNumSelectedItems()) {
     Selection::Item& item = selection->GetItem(0);
@@ -777,7 +776,6 @@ RefreshGraphCallback(GraphEditorUI* editor)
       editor->SetGraph(new HierarchyGraph(stage->GetRootLayer(), selected));
 
       if (selected.IsValid()) {
-        std::cout << "selected valid : popultae !!" << std::endl;
         editor->Populate();
         return;
       }

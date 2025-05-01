@@ -48,8 +48,8 @@ struct UsdNprStrokeParams {
   bool findSilhouettes;
   bool findCreases;
   bool findBoundaries;
-  float creaseValue;
   float silhouetteWidth;
+  float creaseValue;
   float creaseWidth;
   float boundaryWidth;
 

@@ -163,7 +163,7 @@ private:
   size_t                              _showConstraintsMask;
 
   // timing
-  Timer*                              _timer;
+  //Timer*                              _timer;
 
   friend struct Particles;
 };
