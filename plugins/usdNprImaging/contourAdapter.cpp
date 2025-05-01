@@ -161,20 +161,23 @@ _BuildStrokes(_ContourAdapterComputeDatas& datas)
   graph->ClearStrokeChains();
 
   if(datas.strokeParams->findSilhouettes)
-    graph->BuildRawStrokes(EDGE_SILHOUETTE, GfVec3f(1.f, 0.f, 0.f));
+    graph->BuildStrokeChains(EDGE_SILHOUETTE, GfVec3f(0.f, 1.f, 0.f));
+    //graph->BuildRawStrokes(EDGE_SILHOUETTE, GfVec3f(1.f, 0.f, 0.f));
   else
     std::cout << "skip draw silhouettes..." << std::endl;
 
   if(datas.strokeParams->findBoundaries)
-    graph->BuildRawStrokes(EDGE_BOUNDARY, GfVec3f(0.f, 1.f, 0.f));
+    graph->BuildStrokeChains(EDGE_BOUNDARY, GfVec3f(0.f, 1.f, 0.f));
+    //graph->BuildRawStrokes(EDGE_BOUNDARY, GfVec3f(0.f, 1.f, 0.f));
   else
     std::cout << "skip draw boundaries..." << std::endl;
 
   if(datas.strokeParams->findCreases)
-    graph->BuildRawStrokes(EDGE_CREASE, GfVec3f(0.f, 0.f, 1.f));
+  graph->BuildStrokeChains(EDGE_CREASE, GfVec3f(0.f, 1.f, 0.f));
+    //graph->BuildRawStrokes(EDGE_CREASE, GfVec3f(0.f, 0.f, 1.f));
   else
     std::cout << "skip draw creases..." << std::endl;
-  //graph->BuildStrokeChains(EDGE_SILHOUETTE, GfVec3f(0.f, 1.f, 0.f));
+  
 }
 
 void 

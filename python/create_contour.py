@@ -5,7 +5,7 @@ stage = usdviewApi.stage
 
 camera = UsdGeom.Camera.Define(stage, "/camera")
 camera.CreateProjectionAttr().Set(UsdGeom.Tokens.perspective)
-op = camera.AddTranslateOp(UsdGeom.XformOp.PrecisionFloat)
+op = camera.AddTranslateOp(UsdGeom.XformOp.PrecisionDouble)
 op.Set((0.0,6.0,60.0))
 
 contour = UsdNpr.Contour.Define(stage, "/contour")

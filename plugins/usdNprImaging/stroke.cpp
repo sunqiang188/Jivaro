@@ -247,13 +247,14 @@ UsdNprStrokeGraph::BuildStrokeChains(short edgeType, const GfVec3f& color)
   else return;
 
   ResetChainedFlag(*edges);
-  size_t numEdges = (*edges).size();
+  size_t numEdges = edges->size();
   
   if(numEdges) {
-    size_t startId = 0;
-    while(startId < numEdges)
+    size_t edgeId = 0;
+    while(edgeId < numEdges)
     {
-      UsdNprHalfEdge* currentEdge = (UsdNprHalfEdge*)(*edges)[startId];
+
+      UsdNprHalfEdge* currentEdge = (UsdNprHalfEdge*)(*edges)[edgeId];
       if(!(_allFlags[currentEdge->index] & EDGE_CHAINED)) {
         UsdNprStrokeChain stroke;
         if(edgesWeighted) {
@@ -278,12 +279,11 @@ UsdNprStrokeGraph::BuildStrokeChains(short edgeType, const GfVec3f& color)
             positions[currentEdge->vertex], normals[currentEdge->vertex], color);
         }
           
-
         stroke.Build(this, _allFlags, edgeType);
         if(stroke.GetNumNodes()>1)
           _strokes.push_back(stroke);
       }
-      else startId++;
+      else edgeId++;
     }
   }
 }
