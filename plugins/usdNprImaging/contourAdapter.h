@@ -35,6 +35,8 @@
 #include "api.h"
 #include "mesh.h"
 #include "stroke.h"
+#include "tokens.h"
+#include "dataSourceContour.h"
 #include <mutex>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -68,8 +70,8 @@ public:
     typedef UsdImagingGprimAdapter BaseAdapter;
 
     UsdImagingContourAdapter()
-        : UsdImagingGprimAdapter()
-    {}
+        : UsdImagingGprimAdapter(){}
+
     USDNPRIMAGING_API
     virtual ~UsdImagingContourAdapter();
 
@@ -81,6 +83,30 @@ public:
 
     USDNPRIMAGING_API
     bool IsSupported(UsdImagingIndexProxy const* index) const override;
+
+        // ---------------------------------------------------------------------- //
+    /// \name Scene Index Support
+    // ---------------------------------------------------------------------- //
+
+    USDNPRIMAGING_API
+    virtual TfTokenVector GetImagingSubprims(UsdPrim const& prim);
+
+    USDNPRIMAGING_API
+    virtual TfToken GetImagingSubprimType(
+        UsdPrim const& prim, TfToken const& subprim);
+
+        USDNPRIMAGING_API
+    virtual HdContainerDataSourceHandle GetImagingSubprimData(
+            UsdPrim const& prim,
+            TfToken const& subprim,
+            const UsdImagingDataSourceStageGlobals &stageGlobals);
+
+            USDNPRIMAGING_API
+    virtual HdDataSourceLocatorSet InvalidateImagingSubprim(
+            UsdPrim const& prim,
+            TfToken const& subprim,
+            TfTokenVector const& properties,
+            UsdImagingPropertyInvalidationType invalidationType);
 
     // ---------------------------------------------------------------------- //
     /// \name Parallel Setup and Resolve

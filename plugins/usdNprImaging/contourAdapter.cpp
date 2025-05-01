@@ -56,8 +56,51 @@ TF_REGISTRY_FUNCTION(TfType)
     t.SetFactory< UsdImagingPrimAdapterFactory<Adapter> >();
 }
 
-UsdImagingContourAdapter::~UsdImagingContourAdapter() 
+TfTokenVector
+UsdImagingContourAdapter::GetImagingSubprims(UsdPrim const& prim)
 {
+    return { TfToken() };
+}
+
+TfToken
+UsdImagingContourAdapter::GetImagingSubprimType(
+  UsdPrim const& prim,
+  TfToken const& subprim)
+{
+  if (subprim.IsEmpty()) {
+    return UsdNprImagingTokens->contour;
+  }
+  return TfToken();
+}
+
+HdContainerDataSourceHandle
+UsdImagingContourAdapter::GetImagingSubprimData(
+  UsdPrim const& prim,
+  TfToken const& subprim,
+  const UsdImagingDataSourceStageGlobals &stageGlobals)
+{
+  if (subprim.IsEmpty()) {
+    return UsdNprDataSourceContourPrim::New(
+      prim.GetPath(),
+      prim,
+      stageGlobals);
+  }
+  return nullptr;
+}
+
+HdDataSourceLocatorSet
+UsdImagingContourAdapter::InvalidateImagingSubprim(
+  UsdPrim const& prim,
+  TfToken const& subprim,
+  TfTokenVector const& properties,
+  const UsdImagingPropertyInvalidationType invalidationType)
+{
+  if (subprim.IsEmpty()) {
+    return UsdNprDataSourcePointsPrim::Invalidate(
+      prim, subprim, properties, invalidationType);
+  }
+
+  return HdDataSourceLocatorSet();
 }
 
 bool
