@@ -12,8 +12,8 @@ usd_library(usdNprImaging
         utils
         mesh
         stroke
-        contourAdapter
-        dataSourceContour
+        adapter
+        dataSource
         tokens
 
     PUBLIC_HEADERS

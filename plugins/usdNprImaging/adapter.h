@@ -1,42 +1,21 @@
 //
-// Copyright 2018 Pixar
-//
-// Licensed under the Apache License, Version 2.0 (the "Apache License")
-// with the following modification; you may not use this file except in
-// compliance with the Apache License and the following modification to it:
-// Section 6. Trademarks. is deleted and replaced with:
-//
-// 6. Trademarks. This License does not grant permission to use the trade
-//    names, trademarks, service marks, or product names of the Licensor
-//    and its affiliates, except as required to comply with Section 4(c) of
-//    the License and to reproduce the content of the NOTICE file.
-//
-// You may obtain a copy of the Apache License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the Apache License with the above modification is
-// distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the Apache License for the specific
-// language governing permissions and limitations under the Apache License.
+// Copyright 2022 benmalartre
 //
 #ifndef PXR_USD_IMAGING_USD_NPR_IMAGING_CONTOUR_ADAPTER_H
 #define PXR_USD_IMAGING_USD_NPR_IMAGING_CONTOUR_ADAPTER_H
 
-/// \file usdImaging/contourAdapter.h
 
 #include "pxr/pxr.h"
 #include "pxr/base/gf/vec3f.h"
 #include "pxr/base/gf/matrix4d.h"
 #include "pxr/usd/usdGeom/xformCache.h"
+#include "pxr/imaging/hd/retainedDataSource.h"
 #include "pxr/usdImaging/usdImaging/primAdapter.h"
 #include "pxr/usdImaging/usdImaging/gprimAdapter.h"
 #include "api.h"
 #include "mesh.h"
 #include "stroke.h"
 #include "tokens.h"
-#include "dataSourceContour.h"
 #include <mutex>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -84,7 +63,7 @@ public:
     USDNPRIMAGING_API
     bool IsSupported(UsdImagingIndexProxy const* index) const override;
 
-        // ---------------------------------------------------------------------- //
+    // ---------------------------------------------------------------------- //
     /// \name Scene Index Support
     // ---------------------------------------------------------------------- //
 
@@ -95,13 +74,13 @@ public:
     virtual TfToken GetImagingSubprimType(
         UsdPrim const& prim, TfToken const& subprim);
 
-        USDNPRIMAGING_API
+    USDNPRIMAGING_API
     virtual HdContainerDataSourceHandle GetImagingSubprimData(
             UsdPrim const& prim,
             TfToken const& subprim,
             const UsdImagingDataSourceStageGlobals &stageGlobals);
 
-            USDNPRIMAGING_API
+    USDNPRIMAGING_API
     virtual HdDataSourceLocatorSet InvalidateImagingSubprim(
             UsdPrim const& prim,
             TfToken const& subprim,
@@ -161,15 +140,6 @@ public:
                         SdfPath const& cachePath,
                         UsdTimeCode time) const override;
 
-    /*
-    USDNPRIMAGING_API
-    static bool GetColor(UsdPrim const& prim, 
-                         UsdTimeCode time,
-                         TfToken *interpolation,
-                         VtValue *color,
-                         VtIntArray *indices);
-    */
-
     USDNPRIMAGING_API
     VtValue Get(UsdPrim const& prim,
                 SdfPath const& cachePath,
@@ -224,3 +194,5 @@ _BuildStrokes(_ContourAdapterComputeDatas& datas);
 PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // PXR_USD_IMAGING_USD_NPR_IMAGING_CONTOUR_ADAPTER_H
+
+

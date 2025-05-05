@@ -21,7 +21,6 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "contourAdapter.h"
 
 #include "pxr/usdImaging/usdImaging/delegate.h"
 #include "pxr/usdImaging/usdImaging/indexProxy.h"
@@ -43,11 +42,24 @@
 
 #include "pxr/base/tf/type.h"
 #include "pxr/base/work/loops.h"
+
+#include "adapter.h"
+#include "dataSource.h"
 #include <iostream>
 #include <vector>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+/*
+namespace {
+  using _PrimSource = UsdImagingDataSourceImplicitsPrim<UsdGeomCube, HdCubeSchema>;
+}
+*/
+
+UsdImagingContourAdapter::~UsdImagingContourAdapter()
+{
+
+}
 
 TF_REGISTRY_FUNCTION(TfType)
 {
@@ -68,7 +80,7 @@ UsdImagingContourAdapter::GetImagingSubprimType(
   TfToken const& subprim)
 {
   if (subprim.IsEmpty()) {
-    return UsdNprImagingTokens->contour;
+    return HdPrimTypeTokens->mesh;
   }
   return TfToken();
 }
@@ -80,7 +92,7 @@ UsdImagingContourAdapter::GetImagingSubprimData(
   const UsdImagingDataSourceStageGlobals &stageGlobals)
 {
   if (subprim.IsEmpty()) {
-    return UsdNprDataSourceContourPrim::New(
+    return UsdNprImagingDataSourceContour::New(
       prim.GetPath(),
       prim,
       stageGlobals);
@@ -95,12 +107,8 @@ UsdImagingContourAdapter::InvalidateImagingSubprim(
   TfTokenVector const& properties,
   const UsdImagingPropertyInvalidationType invalidationType)
 {
-  if (subprim.IsEmpty()) {
-    return UsdNprDataSourcePointsPrim::Invalidate(
-      prim, subprim, properties, invalidationType);
-  }
-
-  return HdDataSourceLocatorSet();
+  return UsdNprImagingDataSourceContour::Invalidate(
+    prim, subprim, properties, invalidationType);
 }
 
 bool
@@ -647,6 +655,7 @@ UsdImagingContourAdapter::Get(UsdPrim const& prim,
                            UsdTimeCode time,
                            VtIntArray *outIndices) const
 {
+  std::cout << "Contour Adapter Get Called on " << prim.GetPath() << " : " << key << std::endl;
   TRACE_FUNCTION();
   HF_MALLOC_TAG_FUNCTION();
 
