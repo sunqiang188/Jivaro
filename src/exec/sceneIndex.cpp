@@ -71,6 +71,9 @@ _GetPointsSceneIndexPrim(Points* points)
             .SetInterpolation(
               HdPrimvarSchema::BuildInterpolationDataSource(
                 HdPrimvarSchemaTokens->varying))
+            .SetRole(
+              HdPrimvarSchema::BuildRoleDataSource(
+                HdPrimvarsSchemaTokens->widths))
             .Build(),
           HdTokens->displayColor,
           HdPrimvarSchema::Builder()
@@ -80,23 +83,11 @@ _GetPointsSceneIndexPrim(Points* points)
             .SetInterpolation(
               HdPrimvarSchema::BuildInterpolationDataSource(
                 HdPrimvarSchemaTokens->vertex))
-            .SetRole(HdPrimvarSchema::BuildRoleDataSource(
-              HdPrimvarSchemaTokens->color))
-            .Build())/*,
-        HdPurposeSchemaTokens->purpose,
-        HdPurposeSchema::Builder()
-          .SetPurpose(
-            _TokenDataSource::New(HdRenderTagTokens->geometry))
-          .Build(),
-        HdVisibilitySchemaTokens->visibility,
-        HdVisibilitySchema::Builder()
-          .SetVisibility(_BoolDataSource::New(true))
-          .Build(),
-        HdXformSchemaTokens->xform,
-        HdXformSchema::Builder()
-          .SetMatrix(_MatrixDataSource::New(GfMatrix4d(1)))
-          .SetResetXformStack(_BoolDataSource::New(false))
-          .Build()*/)});
+            .SetRole(
+                HdPrimvarSchema::BuildRoleDataSource(
+                  HdPrimvarSchemaTokens->color))
+            .Build()))
+    });
   return prim;
 }
 

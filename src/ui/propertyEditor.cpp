@@ -88,6 +88,56 @@ PropertyEditorUI::_DrawAssetInfo(const UsdPrim& prim)
   return true;
 }
 
+void _AddSampleCallback(int index)
+{
+  Selection* selection = Application::Get()->GetModel()->GetSelection();
+  UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
+  Time* time = Time::Get();
+  UndoBlock block;
+  switch(index) {
+    case 1: 
+      std::cout << "Add Translate Sample..." << std::endl;
+      for(auto& selected: selection->GetItems()) {
+        UsdPrim prim = stage->GetPrimAtPath(selected.path);
+        if(!prim.IsA<UsdGeomXformable>()) continue;
+
+        std::cout << "found prim : " << prim.GetPath() << std::endl;
+
+        UsdGeomXformCommonAPI xformApi(prim);
+
+        // Define variables to hold transform components
+        GfVec3d translation;
+        GfVec3f rotation, scale, pivot;
+        UsdGeomXformCommonAPI::RotationOrder rotOrder;
+
+        // Retrieve transform components at frame 24
+        if (xformApi.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, UsdTimeCode(24.0))) {
+            std::cout << "Translation at frame " << time->GetActiveTime() << ": " << translation << std::endl;
+        } else {
+            std::cerr << "Failed to retrieve translation at frame " << time->GetActiveTime() << "." << std::endl;
+        }
+
+        xformApi.SetTranslate(translation, time->GetActiveTime());
+
+      }
+
+      break;
+
+    case 2:
+      std::cout << "Add Rotation Sample..." << std::endl;
+      break;
+
+    case 3:
+      std::cout << "Add Scale Sample..." << std::endl;
+      break;
+  }
+
+  std::cout << "on selected objects:";
+  for(const auto& selected: selection->GetItems())
+    std::cout << selected.path << ",";
+  
+    std::cout << std::endl;
+}
 
 void _XXX_CALLBACK__(int index)
 {
@@ -99,7 +149,7 @@ static void DrawPropertyMiniButton(ImGuiID id=0)
 {
   UI::AddIconButton(
     id, ICON_FA_PEN, UI::STATE_DEFAULT,
-    std::bind(_XXX_CALLBACK__, id));
+    std::bind(_AddSampleCallback, id));
   ImGui::SameLine();
 }
 
@@ -141,7 +191,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       // Translate
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      UI::AddIconButton(1, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_XXX_CALLBACK__, 1));
+      UI::AddIconButton(1, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_AddSampleCallback, 1));
       ImGui::SameLine();
 
       ImGui::TableSetColumnIndex(1);
@@ -159,7 +209,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       // Rotation
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      UI::AddIconButton(2, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_XXX_CALLBACK__, 2));
+      UI::AddIconButton(2, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_AddSampleCallback, 2));
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("rotation");
@@ -173,7 +223,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
       // Scale
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      UI::AddIconButton(3, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_XXX_CALLBACK__, 3));
+      UI::AddIconButton(3, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_AddSampleCallback, 3));
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("scale");
@@ -187,7 +237,7 @@ PropertyEditorUI::_DrawXformsCommon(UsdTimeCode time)
 
       ImGui::TableNextRow();
       ImGui::TableSetColumnIndex(0);
-      UI::AddIconButton(4, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_XXX_CALLBACK__, 4));
+      UI::AddIconButton(4, ICON_FA_KEY, UI::STATE_DEFAULT, std::bind(_AddSampleCallback, 4));
 
       ImGui::TableSetColumnIndex(1);
       ImGui::Text("pivot");

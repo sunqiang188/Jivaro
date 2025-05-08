@@ -63,9 +63,9 @@ HashGrid::Closests(size_t index, const GfVec3f* positions,
           if(_cellEntries[n] != index && 
             (point - positions[_cellEntries[n]]).GetLengthSq() < distance2)
               closests.push_back(_cellEntries[n]);
+            
         }
       }
-
   return closests.size();
 }
 

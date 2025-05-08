@@ -3,7 +3,12 @@ set(PXR_PACKAGE usdNprImaging)
 
 usd_library(usdNprImaging
     LIBRARIES
+        tf
         usd
+        hd
+        hdsi
+        hf
+        hd
         usdImaging
         usdNpr
         work
@@ -14,6 +19,8 @@ usd_library(usdNprImaging
         stroke
         adapter
         dataSource
+        sceneIndexPlugin
+        sceneIndex
         tokens
 
     PUBLIC_HEADERS

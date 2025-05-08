@@ -59,6 +59,10 @@ class Contour "Contour" (
     doc = """Thickness of the crease strokes"""
   )
 
+  float creaseAngle = 90.0(
+    doc = """Crease detection angle"""
+  )
+
   rel contour:viewPoint (
     customData = {
             string apiName = "contourViewPoint"

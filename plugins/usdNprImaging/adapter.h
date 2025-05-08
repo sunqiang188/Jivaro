@@ -40,19 +40,19 @@ typedef TfHashMap<SdfPath, UsdNprHalfEdgeMeshSharedPtr, SdfPath::Hash>
   UsdNprHalfEdgeMeshMap;
 
 
-/// \class UsdImagingContourAdapter
+/// \class UsdNprImagingContourAdapter
 ///
 /// Delegate support for UsdNprContour.
 ///
-class UsdImagingContourAdapter : public UsdImagingGprimAdapter {
+class UsdNprImagingContourAdapter : public UsdImagingGprimAdapter {
 public:
     typedef UsdImagingGprimAdapter BaseAdapter;
 
-    UsdImagingContourAdapter()
+    UsdNprImagingContourAdapter()
         : UsdImagingGprimAdapter(){}
 
     USDNPRIMAGING_API
-    virtual ~UsdImagingContourAdapter();
+    virtual ~UsdNprImagingContourAdapter();
 
     USDNPRIMAGING_API
     SdfPath Populate(

@@ -41,9 +41,8 @@ static Voxels* _Voxelize(Mesh* mesh, float radius)
   voxels->Trace(0);
   voxels->Trace(1);
   voxels->Trace(2);
-  voxels->Build(0.0f);
+  voxels->Build(0.002f);
 
-  std::cout << "VOXELIZE : " << voxels->GetNumPoints() << " voxels.." << std::endl;
   return voxels;
 }
 
@@ -113,7 +112,7 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
   if (!stage) return;
 
   float mass = 1.f;
-  float radius = 0.1f;
+  float radius = 0.2f;
   float damping = 0.1f;
   float restitution = 0.05f;
   float friction = 0.9f;
@@ -264,7 +263,6 @@ void TestParticles::InitExec(UsdStageRefPtr& stage)
   _solver->Reset(stage);
 
 }
-
 
 void TestParticles::UpdateExec(UsdStageRefPtr& stage, float time)
 {

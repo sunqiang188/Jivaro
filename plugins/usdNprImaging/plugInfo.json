@@ -3,7 +3,15 @@
         {
             "Info": {
                 "Types": {
-                    "UsdImagingContourAdapter": {
+                    "UsdNprSceneIndexPlugin": {
+                        "bases": [
+                            "HdSceneIndexPlugin"
+                        ],
+                        "displayName": "Scene Index to execute UsdNpr", 
+                        "loadWithRenderer": "", 
+                        "priority": 1
+                    },
+                    "UsdNprImagingContourAdapter": {
                         "bases": [
                             "UsdImagingGprimAdapter"
                         ],

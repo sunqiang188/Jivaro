@@ -44,7 +44,8 @@ public:
     : Mask(Element::COLLISION)
     , _collider(collider)
     , _restitution(restitution)
-    , _friction(friction){};
+    , _friction(friction)
+    , _enabled(true){};
 
   /*
   void AddBody(Particles* particles, Body* body);
@@ -111,7 +112,7 @@ protected:
   static const size_t PACKET_SIZE;
 
   virtual void _UpdateParameters(const UsdPrim& prim, double time);
-  virtual void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
+  virtual void _BuildContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints);
   virtual void _FindContacts(Particles* particles, size_t begin, size_t end, float ft);
   virtual void _UpdateContacts(Particles* particles, size_t begin, size_t end);
@@ -289,6 +290,9 @@ public:
   void FindContacts(Particles* particles, const std::vector<Body*>& bodies, 
     std::vector<Constraint*>& constraints, float ft)override;
 
+  void GetPoints(Particles* particles, VtArray<GfVec3f>& points,
+    VtArray<float>& radius, VtArray<GfVec3f>& colors) override;
+
 protected:
   void _UpdateParameters( const UsdPrim& prim, double time) override;
   void _ComputeNeighbors(const std::vector<Body*>& bodies);
@@ -297,7 +301,7 @@ protected:
   void _UpdateContacts(Particles* particles, size_t begin, size_t end) override;
   void _FindContact(Particles* particles, size_t index, float ft) override;
 
-  void _BuildContacts(Particles* particles, const std::vector<Body*>& bodies,
+  void _BuildContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
     std::vector<Constraint*>& constraints)override;
 
   inline bool _AreConnected(size_t lhs, size_t rhs);

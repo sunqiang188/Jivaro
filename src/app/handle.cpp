@@ -792,8 +792,10 @@ TranslateHandle::_UpdateTargets(bool interacting)
   Application* app = Application::Get();
   Model* model = app->GetModel();
   UsdStageRefPtr stage = model->GetStage();
-  UsdTimeCode activeTime = UsdTimeCode::Default();
   Selection* selection = model->GetSelection();
+  Time* time = Time::Get();
+  UsdTimeCode activeTime(
+    time->IsPlaying() ? UsdTimeCode::Default() : time->GetActiveTime());
 
   GfMatrix4d xformMatrix;
   GfMatrix4f localMatrix = _matrix * _startMatrix.GetInverse();

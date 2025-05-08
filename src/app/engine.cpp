@@ -264,7 +264,7 @@ Engine::_PrepareDefaultLighting()
   // set a animated spot light
   const float t = Time::Get()->GetActiveTime();
 
-  for (size_t i = 0; i < 3; ++i) {
+  for (size_t i = 0; i < 2; ++i) {
     const GfVec3d lightPos(GfSin(static_cast<float>(i) /*+ (t *0.1)*/) * 20.f, 20.f, GfCos(static_cast<float>(i) /*+ (t *0.1)*/)*20.f);
     const pxr::GfVec3f direction(-lightPos.GetNormalized());
 
@@ -306,7 +306,7 @@ Engine::_PrepareDefaultLighting()
 void 
 Engine::Prepare()
 {
-  _PrepareDefaultLighting();
+  //_PrepareDefaultLighting();
   _taskController->SetFreeCameraMatrices(_camView, _camProj);
 
 /*

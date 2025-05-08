@@ -70,7 +70,6 @@ void Particles::AddBody(Body* item, const GfMatrix4d& matrix)
   for (size_t idx = base; idx < size; ++idx) {
     
     pos = GfVec3f(matrix.Transform(points[idx - base]));
-    float bY = float(idx) / float(size);
     state[idx] = ACTIVE;
     body[idx] = item;
     mass[idx] = m;
@@ -83,7 +82,7 @@ void Particles::AddBody(Body* item, const GfMatrix4d& matrix)
     position[idx] = pos;
     predicted[idx] = pos;
     velocity[idx] = item->GetVelocity();
-    color[idx] = (GfVec3f(RANDOM_LO_HI(0.f, 0.2f)+0.6) + item->GetColor()) * 0.5f * bY;
+    color[idx] = item->GetColor();
     rotation[idx] = GfQuatf(1.f);
   }
 

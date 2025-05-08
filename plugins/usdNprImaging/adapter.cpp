@@ -56,26 +56,26 @@ namespace {
 }
 */
 
-UsdImagingContourAdapter::~UsdImagingContourAdapter()
+UsdNprImagingContourAdapter::~UsdNprImagingContourAdapter()
 {
 
 }
 
 TF_REGISTRY_FUNCTION(TfType)
 {
-    typedef UsdImagingContourAdapter Adapter;
+    typedef UsdNprImagingContourAdapter Adapter;
     TfType t = TfType::Define<Adapter, TfType::Bases<Adapter::BaseAdapter> >();
     t.SetFactory< UsdImagingPrimAdapterFactory<Adapter> >();
 }
 
 TfTokenVector
-UsdImagingContourAdapter::GetImagingSubprims(UsdPrim const& prim)
+UsdNprImagingContourAdapter::GetImagingSubprims(UsdPrim const& prim)
 {
     return { TfToken() };
 }
 
 TfToken
-UsdImagingContourAdapter::GetImagingSubprimType(
+UsdNprImagingContourAdapter::GetImagingSubprimType(
   UsdPrim const& prim,
   TfToken const& subprim)
 {
@@ -86,7 +86,7 @@ UsdImagingContourAdapter::GetImagingSubprimType(
 }
 
 HdContainerDataSourceHandle
-UsdImagingContourAdapter::GetImagingSubprimData(
+UsdNprImagingContourAdapter::GetImagingSubprimData(
   UsdPrim const& prim,
   TfToken const& subprim,
   const UsdImagingDataSourceStageGlobals &stageGlobals)
@@ -101,7 +101,7 @@ UsdImagingContourAdapter::GetImagingSubprimData(
 }
 
 HdDataSourceLocatorSet
-UsdImagingContourAdapter::InvalidateImagingSubprim(
+UsdNprImagingContourAdapter::InvalidateImagingSubprim(
   UsdPrim const& prim,
   TfToken const& subprim,
   TfTokenVector const& properties,
@@ -112,13 +112,13 @@ UsdImagingContourAdapter::InvalidateImagingSubprim(
 }
 
 bool
-UsdImagingContourAdapter::IsSupported(UsdImagingIndexProxy const* index) const
+UsdNprImagingContourAdapter::IsSupported(UsdImagingIndexProxy const* index) const
 {
     return index->IsRprimTypeSupported(HdPrimTypeTokens->mesh);
 }
 
 SdfPath
-UsdImagingContourAdapter::Populate(UsdPrim const& prim, 
+UsdNprImagingContourAdapter::Populate(UsdPrim const& prim, 
                             UsdImagingIndexProxy* index,
                             UsdImagingInstancerContext const* instancerContext)
 {
@@ -167,7 +167,7 @@ UsdImagingContourAdapter::Populate(UsdPrim const& prim,
 }
 
 void 
-UsdImagingContourAdapter::TrackVariability(UsdPrim const& prim,
+UsdNprImagingContourAdapter::TrackVariability(UsdPrim const& prim,
                                           SdfPath const& cachePath,
                                           HdDirtyBits* timeVaryingBits,
                                           UsdImagingInstancerContext const* 
@@ -232,7 +232,7 @@ _BuildStrokes(_ContourAdapterComputeDatas& datas)
 }
 
 void 
-UsdImagingContourAdapter::UpdateForTime(UsdPrim const& prim,
+UsdNprImagingContourAdapter::UpdateForTime(UsdPrim const& prim,
                                         SdfPath const& cachePath, 
                                         UsdTimeCode time,
                                         HdDirtyBits requestedBits,
@@ -326,7 +326,7 @@ UsdImagingContourAdapter::UpdateForTime(UsdPrim const& prim,
 /// Change Processing
 // ---------------------------------------------------------------------- //
 HdDirtyBits
-UsdImagingContourAdapter::ProcessPropertyChange(
+UsdNprImagingContourAdapter::ProcessPropertyChange(
   const UsdPrim& prim,
   const SdfPath& cachePath,
   const TfToken& propertyName)
@@ -345,7 +345,7 @@ UsdImagingContourAdapter::ProcessPropertyChange(
 }
 
 void
-UsdImagingContourAdapter::ProcessPrimResync(
+UsdNprImagingContourAdapter::ProcessPrimResync(
   SdfPath const& primPath,
   UsdImagingIndexProxy* index)
 {
@@ -353,7 +353,7 @@ UsdImagingContourAdapter::ProcessPrimResync(
 }
 
 void
-UsdImagingContourAdapter::ProcessPrimRemoval(
+UsdNprImagingContourAdapter::ProcessPrimRemoval(
   SdfPath const& primPath,
   UsdImagingIndexProxy* index)
 {
@@ -364,7 +364,7 @@ UsdImagingContourAdapter::ProcessPrimRemoval(
 }
 
 void 
-UsdImagingContourAdapter::MarkDirty(UsdPrim const& prim,
+UsdNprImagingContourAdapter::MarkDirty(UsdPrim const& prim,
                                     SdfPath const& cachePath,
                                     HdDirtyBits dirty,
                                     UsdImagingIndexProxy* index)
@@ -374,14 +374,14 @@ UsdImagingContourAdapter::MarkDirty(UsdPrim const& prim,
 
 // parameters
 void
-UsdImagingContourAdapter::_PopulateStrokeParams(UsdPrim const& prim,
+UsdNprImagingContourAdapter::_PopulateStrokeParams(UsdPrim const& prim,
   UsdNprStrokeParams* params)
 {
 
 }
 
 void
-UsdImagingContourAdapter::_ComputeOutputGeometry(
+UsdNprImagingContourAdapter::_ComputeOutputGeometry(
   _ContourData* contourData, 
   const UsdNprStrokeGraphList& strokeGraphs,
   UsdImagingPrimvarDescCache* primvarDescCache, 
@@ -538,7 +538,7 @@ static void _AddHalfEdge(
 
 
 void
-UsdImagingContourAdapter::_ComputeNormalsGeometry(
+UsdNprImagingContourAdapter::_ComputeNormalsGeometry(
   _ContourData* contourData, 
   const UsdNprStrokeGraphList& strokeGraphs) const
 {
@@ -566,7 +566,7 @@ UsdImagingContourAdapter::_ComputeNormalsGeometry(
 }
 
 void
-UsdImagingContourAdapter::_ComputeHalfEdgesGeometry(
+UsdNprImagingContourAdapter::_ComputeHalfEdgesGeometry(
   _ContourData* contourData, 
   const UsdNprStrokeGraphList& strokeGraphs) const
 {
@@ -611,7 +611,7 @@ UsdImagingContourAdapter::_ComputeHalfEdgesGeometry(
 
 /*virtual*/ 
 VtValue
-UsdImagingContourAdapter::GetTopology(UsdPrim const& prim,
+UsdNprImagingContourAdapter::GetTopology(UsdPrim const& prim,
                                    SdfPath const& cachePath,
                                    UsdTimeCode time) const
 {
@@ -625,14 +625,14 @@ UsdImagingContourAdapter::GetTopology(UsdPrim const& prim,
 
 /*
 bool
-UsdImagingContourAdapter::GetColor(UsdPrim const& prim,
+UsdNprImagingContourAdapter::GetColor(UsdPrim const& prim,
                                  UsdTimeCode time,
                                  TfToken* interpolation,
                                  VtValue* color,
                                  VtIntArray *indices)
 {
   _ContourData* contourData = 
-    UsdImagingContourAdapter::_GetContourData(prim.GetPath());
+    UsdNprImagingContourAdapter::_GetContourData(prim.GetPath());
   if(contourData) {
     if (interpolation) {
         *interpolation = UsdGeomTokens->faceVarying;
@@ -649,7 +649,7 @@ UsdImagingContourAdapter::GetColor(UsdPrim const& prim,
 
 /*virtual*/
 VtValue
-UsdImagingContourAdapter::Get(UsdPrim const& prim,
+UsdNprImagingContourAdapter::Get(UsdPrim const& prim,
                            SdfPath const& cachePath,
                            TfToken const &key,
                            UsdTimeCode time,
@@ -671,8 +671,8 @@ UsdImagingContourAdapter::Get(UsdPrim const& prim,
   return BaseAdapter::Get(prim, cachePath, key, time, outIndices);
 }
 
-UsdImagingContourAdapter::_ContourData*
-UsdImagingContourAdapter::_GetContourData(const SdfPath& cachePath) const
+UsdNprImagingContourAdapter::_ContourData*
+UsdNprImagingContourAdapter::_GetContourData(const SdfPath& cachePath) const
 {
     auto it = _contourDataCache.find(cachePath);
     return it != _contourDataCache.end() ? it->second.get() : nullptr;

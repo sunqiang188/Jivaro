@@ -104,7 +104,6 @@ list(APPEND USD_LIB_NAMES
   sdf
   plug
   garch
-  ndr
   sdr
   sdf
   pcp

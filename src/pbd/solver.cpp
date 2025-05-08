@@ -290,7 +290,7 @@ void Solver::UpdatePointsDisplay()
 
   size_t numCollisions = _collisions.size();
   for(size_t c = 0; c < numCollisions; ++c) {
-    if(_collisions[c]->GetTypeId() == Collision::MESH) {
+    if(_collisions[c]->GetTypeId() == Collision::SELF) {
       _collisions[c]->GetPoints(&_particles, positions, widths, colors);
     }
   }
@@ -393,8 +393,6 @@ void Solver::_ResetCounter(const std::vector<Constraint*>& constraints, size_t c
 
 void Solver::_PrepareContacts()
 {
-  //_timer->Start(0);
-
   for (auto& contact: _contacts)
     delete contact;
 
@@ -408,7 +406,6 @@ void Solver::_PrepareContacts()
     _selfCollisions->FindContacts(&_particles, _bodies, _contacts, _frameTime);
 
   _ResetCounter(_contacts, 1);
-  //_timer->Stop();
 }
 
 void Solver::_UpdateContacts(float t)
@@ -442,8 +439,6 @@ void Solver::_IntegrateParticles(size_t begin, size_t end)
     if(_particles.state[index] != Particles::ACTIVE)continue;
 
     predicted[index] = position[index] + velocity[index] * _stepTime;
-
-    colors[index] = RandomColorByIndex(index);
   }
 }
 
@@ -533,10 +528,13 @@ void Solver::Update(UsdStageRefPtr& stage, float time)
     Step(stage, time);
   }
 
+  
   if(_showPoints)UpdatePointsDisplay();
   else ClearPointsDisplay();
+  
   if(_showConstraints)UpdateConstraintsDisplay();
   else ClearConstraintsDisplay();
+  
   UpdateGeometries();
 
 }
@@ -581,25 +579,26 @@ void Solver::Reset(UsdStageRefPtr& stage)
 
   _particles.SetAllState(Particles::ACTIVE);
 
+  for(auto& constraint: _constraints)
+    constraint->Reset(&_particles);
+
   for (auto& contact: _contacts)
     delete contact;
   _contacts.clear();
 
-  for(Collision* collision: _collisions) {
+  /*
+  for(Collision* collision: _collisions)
     collision->Init(&_particles, _bodies, _contacts);
-  }
+  */
 
-  if(_selfCollisions)delete _selfCollisions;
-  _selfCollisions = new SelfCollision(&_particles, 
+  if(!_selfCollisions) {
+    _selfCollisions = new SelfCollision(&_particles, 
     GetPrim().GetPath().AppendProperty(TfToken("selfCollide")), 0.5f, 0.5f);
-  _selfCollisions->Init(&_particles, _bodies, _contacts);
-
-  for(auto& constraint: _constraints)
-    constraint->Reset(&_particles);
-  
-  if(_selfCollisions)
+    _selfCollisions->Init(&_particles, _bodies, _contacts);
+  }
+  else
     _selfCollisions->Reset();
-
+  
   for(auto& collision: _collisions)
     collision->Reset();
 

@@ -13,15 +13,22 @@ JVR_NAMESPACE_OPEN_SCOPE
 void Contact::Init(Collision* collision, Particles* particles, size_t index)
 {
 
-  _normal = collision->GetGradient(particles, index);
-  _initDepth = collision->GetValue(particles, index);
+  
+  if(collision->GetTypeId() != Collision::SELF) {
+    _initDepth = collision->GetValue(particles, index);
+    _velocity = collision->GetVelocity(particles, index);
+    _normal = collision->GetGradient(particles, index);
+  } else {
+    SelfCollision* selfCollision = (SelfCollision*)collision;
+    const size_t other = GetComponentIndex();
+    
+    _initDepth = selfCollision->GetValue(particles, index, other);
+    _velocity = selfCollision->GetVelocity(particles, index, other);
+    _normal = selfCollision->GetGradient(particles, index, other);
+  }
+
   _depth = _initDepth;
 
-  
-  if(collision->GetTypeId() != Collision::SELF) 
-    _velocity = collision->GetVelocity(particles, index);
-  else
-    _velocity = ((SelfCollision*)collision)->GetVelocity(particles, index, GetComponentIndex());
   _state = _depth < collision->GetMargin() ? ACTIVE : DISCARD;
   if(_depth < 0.f)_state = TOUCHING;
   
@@ -29,18 +36,24 @@ void Contact::Init(Collision* collision, Particles* particles, size_t index)
 
 void Contact::Update(Collision* collision, Particles* particles, size_t index)
 {
+
   if(!IsActive())return;
-  
-  _normal = collision->GetGradient(particles, index);
-  _depth = collision->GetValue(particles, index);
+
+  if(collision->GetTypeId() != Collision::SELF) {
+    _depth = collision->GetValue(particles, index);
+    _velocity = collision->GetVelocity(particles, index);
+    _normal = collision->GetGradient(particles, index);  
+  } else {
+    SelfCollision* selfCollision = (SelfCollision*)collision;
+    const size_t other = GetComponentIndex();
+    
+    _depth = selfCollision->GetValue(particles, index, other);
+    _velocity = selfCollision->GetVelocity(particles, index, other);
+    _normal = selfCollision->GetGradient(particles, index, other);
+  }
+
   if(_depth < 0.f)_state = TOUCHING;
   else _state = ACTIVE;
-
-  
-  if(collision->GetTypeId() != Collision::SELF) 
-    _velocity = collision->GetVelocity(particles, index);
-  else
-    _velocity = ((SelfCollision*)collision)->GetVelocity(particles, index, GetComponentIndex());
   
 
   /*
@@ -100,9 +113,9 @@ Contacts::GetNumUsed(size_t index) const
 
 size_t 
 Contacts::GetTotalNumUsed() const {
-  size_t numContacts = 0;
-  for(size_t x=0; x < n; ++x) numContacts += used[x];
-  return numContacts;
+  size_t totalNumUsed = 0;
+  for(size_t x=0; x < n; ++x) totalNumUsed += used[x];
+  return totalNumUsed;
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE
