@@ -101,6 +101,19 @@ static void CreatePrimCallback(Model* model, const TfToken& type)
   }
 }
 
+static void CreateLightCallback(Model* model, const TfToken& type)
+{
+  Selection* selection = model->GetSelection();
+  TfToken name(type.GetString() + "_" + RandomString(6));
+
+  if (selection->GetNumSelectedItems()) {
+    ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), selection->GetItem(0).path.AppendChild(name), type);
+  }
+  else {
+    ADD_COMMAND(CreatePrimCommand, model->GetRootLayer(), SdfPath("/" + name.GetString()), type);
+  }
+}
+
 
 ImGuiWindowFlags MenuUI::_flags =
   ImGuiWindowFlags_None |
@@ -181,13 +194,19 @@ MenuUI::MenuUI(View* parent)
   fileMenu->Add("Save", false, true, std::bind(SaveFileCallback, this));
   fileMenu->Add("New", false, true, std::bind(NewFileCallback, this));
 
-  MenuUI::Item* testItem = Add("Create", false, true, NULL);
-  testItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, _model, TfToken("Plane")));
-  testItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cube")));
-  testItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, _model, TfToken("Sphere")));
-  testItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cylinder")));
-  testItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, _model, TfToken("Capsule")));
-  testItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cone")));
+  MenuUI::Item* createItem = Add("Create", false, true, NULL);
+  createItem->Add("Create Empty", false, true, std::bind(CreatePrimCallback, _model, TfToken()));
+  createItem->Add("Create Plane", false, true, std::bind(CreatePrimCallback, _model, TfToken("Plane")));
+  createItem->Add("Create Cube", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cube")));
+  createItem->Add("Create Sphere", false, true, std::bind(CreatePrimCallback, _model, TfToken("Sphere")));
+  createItem->Add("Create Cylinder", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cylinder")));
+  createItem->Add("Create Capsule", false, true, std::bind(CreatePrimCallback, _model, TfToken("Capsule")));
+  createItem->Add("Create Cone", false, true, std::bind(CreatePrimCallback, _model, TfToken("Cone")));
+
+  MenuUI::Item* lightItem = Add("Light", false, true, NULL);
+  lightItem->Add("Distant Light", false, true, std::bind(CreateLightCallback, _model, TfToken("DistantLight")));
+  lightItem->Add("Disk Light", false, true, std::bind(CreateLightCallback, _model, TfToken("DiskLight")));
+  lightItem->Add("Cylinder Light", false, true, std::bind(CreateLightCallback, _model, TfToken("CylinderLight")));
 
   AddPbdMenu(this);
   AddExecMenu(this);

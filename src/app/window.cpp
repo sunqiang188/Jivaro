@@ -700,7 +700,9 @@ bool Window::Update()
   if (IsIdle())return true;
   if (glfwWindowShouldClose(_window)) {
     if (!_shared) {
+      std::cout << "remove window..." << std::endl;
       WindowRegistry::Get()->RemoveWindow(this);
+      std::cout << "delete window..." << std::endl;
       delete this;
       return true;
     }
