@@ -301,25 +301,25 @@ public:
 
 public:
     // --------------------------------------------------------------------- //
-    // SELFCOLLISIONMAXSEPARATIONVELOCITY 
+    // SELFCOLLISIONSTIFFNESS 
     // --------------------------------------------------------------------- //
-    /// Self Collision Maximum separation velocity.
+    /// Self Collision Stiffness.
     ///
     /// | ||
     /// | -- | -- |
-    /// | Declaration | `float pbd:selfCollisionMaxSeparationVelocity = 5` |
+    /// | Declaration | `float pbd:selfCollisionStiffness = 0` |
     /// | C++ Type | float |
     /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->Float |
     USDPBD_API
-    UsdAttribute GetSelfCollisionMaxSeparationVelocityAttr() const;
+    UsdAttribute GetSelfCollisionStiffnessAttr() const;
 
-    /// See GetSelfCollisionMaxSeparationVelocityAttr(), and also 
+    /// See GetSelfCollisionStiffnessAttr(), and also 
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
     /// the default for \p writeSparsely is \c false.
     USDPBD_API
-    UsdAttribute CreateSelfCollisionMaxSeparationVelocityAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
+    UsdAttribute CreateSelfCollisionStiffnessAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
 
 public:
     // --------------------------------------------------------------------- //

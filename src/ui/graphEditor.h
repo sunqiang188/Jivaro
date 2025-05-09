@@ -172,7 +172,7 @@ protected:
         : Item(color) 
         , _start(start)
         , _end(end)
-        , _connexion(connexion) {};
+        , _connexion(connexion){};
 
       bool IsVisible(GraphEditorUI* editor) override { return true; };
       void Draw(GraphEditorUI* editor) override;

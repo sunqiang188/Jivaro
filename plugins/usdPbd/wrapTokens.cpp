@@ -38,9 +38,9 @@ void wrapUsdPbdTokens()
     _ADD_TOKEN(cls, pbdSelfCollisionDamp);
     _ADD_TOKEN(cls, pbdSelfCollisionEnabled);
     _ADD_TOKEN(cls, pbdSelfCollisionFriction);
-    _ADD_TOKEN(cls, pbdSelfCollisionMaxSeparationVelocity);
     _ADD_TOKEN(cls, pbdSelfCollisionRadius);
     _ADD_TOKEN(cls, pbdSelfCollisionRestitution);
+    _ADD_TOKEN(cls, pbdSelfCollisionStiffness);
     _ADD_TOKEN(cls, pbdShowConstraints);
     _ADD_TOKEN(cls, pbdShowPoints);
     _ADD_TOKEN(cls, pbdSimulationEnabled);

@@ -129,10 +129,6 @@ struct UsdPbdTokensType {
     /// 
     /// UsdPbdBodyAPI
     const TfToken pbdSelfCollisionFriction;
-    /// \brief "pbd:selfCollisionMaxSeparationVelocity"
-    /// 
-    /// UsdPbdBodyAPI
-    const TfToken pbdSelfCollisionMaxSeparationVelocity;
     /// \brief "pbd:selfCollisionRadius"
     /// 
     /// UsdPbdBodyAPI
@@ -141,6 +137,10 @@ struct UsdPbdTokensType {
     /// 
     /// UsdPbdBodyAPI
     const TfToken pbdSelfCollisionRestitution;
+    /// \brief "pbd:selfCollisionStiffness"
+    /// 
+    /// UsdPbdBodyAPI
+    const TfToken pbdSelfCollisionStiffness;
     /// \brief "pbd:showConstraints"
     /// 
     /// UsdPbdSolver

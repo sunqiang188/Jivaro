@@ -208,7 +208,6 @@ void Body::UpdateParameters(UsdPrim& prim, float time)
   bodyApi.GetSelfCollisionFrictionAttr().Get(&_selfCollisionFriction, time);
   bodyApi.GetSelfCollisionRestitutionAttr().Get(&_selfCollisionRestitution, time);
   bodyApi.GetSelfCollisionDampAttr().Get(&_selfCollisionDamp, time);
-  bodyApi.GetSelfCollisionMaxSeparationVelocityAttr().Get(&_selfCollisionMaxSeparationVelocity, time);
 
   bool active;
   float stiffness, damp;

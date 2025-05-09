@@ -121,10 +121,6 @@ class "PbdBodyAPI" (
         displayName = "Self Collision Friction"
         doc = "self collision friction coefficient."
     )
-    float pbd:selfCollisionMaxSeparationVelocity = 5 (
-        displayName = "Self Collision Maximum Separation Velocity"
-        doc = "Self Collision Maximum separation velocity."
-    )
     float pbd:selfCollisionRadius = 1 (
         displayName = "Self Collision Radius"
         doc = "particle radius used by self collision detection."
@@ -132,6 +128,10 @@ class "PbdBodyAPI" (
     float pbd:selfCollisionRestitution = 0 (
         displayName = "Self Collision Restitution"
         doc = "Self COllision Restitution coefficient."
+    )
+    float pbd:selfCollisionStiffness = 0 (
+        displayName = "Self Collision Stiffness"
+        doc = "Self Collision Stiffness."
     )
     bool pbd:simulationEnabled = 1 (
         displayName = "Simulation Enabled"

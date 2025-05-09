@@ -65,9 +65,8 @@ public:
   float GetSelfCollisionRadius() const {return _selfCollisionRadius;};
   float GetSelfCollisionFriction() const {return _selfCollisionFriction;};
   float GetSelfCollisionDamp() const {return _selfCollisionDamp;};
-  //float GetSelfCollisionStiffness() const {return _selfCollisionStiffness;};
+  float GetSelfCollisionStiffness() const {return _selfCollisionStiffness;};
   float GetSelfCollisionRestitution() const {return _selfCollisionRestitution;};
-  float GetSelfCollisionMaxSeparationVelocity() const {return _selfCollisionMaxSeparationVelocity;};
 
   size_t GetNumConstraintsGroup();
   ConstraintsGroup* AddConstraintsGroup(const TfToken& group, short type);
@@ -92,7 +91,7 @@ protected:
   float                                     _selfCollisionFriction;
   float                                     _selfCollisionRestitution;
   float                                     _selfCollisionDamp;
-  float                                     _selfCollisionMaxSeparationVelocity;
+  float                                     _selfCollisionStiffness;
 
   GfVec3f                              _color;
   GfVec3f                              _velocity;

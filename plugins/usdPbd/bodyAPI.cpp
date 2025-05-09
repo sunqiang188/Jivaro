@@ -205,15 +205,15 @@ UsdPbdBodyAPI::CreateSelfCollisionRestitutionAttr(VtValue const &defaultValue, b
 }
 
 UsdAttribute
-UsdPbdBodyAPI::GetSelfCollisionMaxSeparationVelocityAttr() const
+UsdPbdBodyAPI::GetSelfCollisionStiffnessAttr() const
 {
-    return GetPrim().GetAttribute(UsdPbdTokens->pbdSelfCollisionMaxSeparationVelocity);
+    return GetPrim().GetAttribute(UsdPbdTokens->pbdSelfCollisionStiffness);
 }
 
 UsdAttribute
-UsdPbdBodyAPI::CreateSelfCollisionMaxSeparationVelocityAttr(VtValue const &defaultValue, bool writeSparsely) const
+UsdPbdBodyAPI::CreateSelfCollisionStiffnessAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
-    return UsdSchemaBase::_CreateAttr(UsdPbdTokens->pbdSelfCollisionMaxSeparationVelocity,
+    return UsdSchemaBase::_CreateAttr(UsdPbdTokens->pbdSelfCollisionStiffness,
                        SdfValueTypeNames->Float,
                        /* custom = */ false,
                        SdfVariabilityVarying,
@@ -296,7 +296,7 @@ UsdPbdBodyAPI::GetSchemaAttributeNames(bool includeInherited)
         UsdPbdTokens->pbdSelfCollisionDamp,
         UsdPbdTokens->pbdSelfCollisionFriction,
         UsdPbdTokens->pbdSelfCollisionRestitution,
-        UsdPbdTokens->pbdSelfCollisionMaxSeparationVelocity,
+        UsdPbdTokens->pbdSelfCollisionStiffness,
         UsdPbdTokens->pbdMass,
         UsdPbdTokens->pbdDamp,
         UsdPbdTokens->pbdVelocity,

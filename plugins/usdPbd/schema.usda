@@ -163,12 +163,12 @@ class "PbdBodyAPI"
     doc = """Self COllision Restitution coefficient."""
   )
 
-  float pbd:selfCollisionMaxSeparationVelocity = 5.0 (
+  float pbd:selfCollisionStiffness = 0.0 (
     customData = {
-      string apiName = "selfCollisionMaxSeparationVelocity"
+      string apiName = "selfCollisionStiffness"
     }
-    displayName = "Self Collision Maximum Separation Velocity"
-    doc = """Self Collision Maximum separation velocity."""
+    displayName = "Self Collision Stiffness"
+    doc = """Self Collision Stiffness."""
   )
 
   float pbd:mass = 1.0 (

@@ -76,16 +76,27 @@ public:
   //-------------------------------------------------------------------
   class Connexion {
     public:
-      Connexion(Port* start, Port* end)
+      enum Type {
+        CONNEXION,
+        RELATIONSHIP,
+        PARENT
+      };
+
+      Connexion(Port* start, Port* end, uint8_t type)
         : _start(start)
-        , _end(end){};
+        , _end(end)
+        , _type(type){};
 
       Port* GetStart() { return _start; };
       Port* GetEnd() { return _end; };
 
+      uint8_t GetType() const {return _type;};
+      void SetType(uint8_t type){_type = type;};
+
     protected:
       Port*               _start;
       Port*               _end;
+      uint8_t             _type;
   };
 
 

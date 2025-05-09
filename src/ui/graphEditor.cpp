@@ -332,16 +332,30 @@ GraphEditorUI::Connexion::GetDescription()
   GraphEditorUI::Node* startNode = start->GetNode();
   GraphEditorUI::Node* endNode = end->GetNode();
 
-  datas.p0 = start->GetPosition() + GfVec2f(startNode->GetWidth(), 0.f) + startNode->GetPosition();
-  datas.p3 = end->GetPosition() + endNode->GetPosition();
+  if( _connexion->GetType() == Graph::Connexion::PARENT) {
+    datas.p0 = start->GetPosition() + startNode->GetPosition();
+    datas.p3 = end->GetPosition() + endNode->GetPosition();
 
-  const float length = (datas.p3 - datas.p0).GetLength();
-  const GfVec2f offset(0.25f * length, 0.f);
+    const float length = (datas.p3 - datas.p0).GetLength();
+    const GfVec2f offset(0.f, 0.25f * (datas.p3[1] - datas.p0[1]));
 
-  datas.p1 = datas.p0 + offset;
-  datas.p2 = datas.p3 - offset;
-  datas.numSegments =
-    GfMax(static_cast<int>(length * NODE_CONNEXION_RESOLUTION), 1);
+    datas.p1 = datas.p0 + offset;
+    datas.p2 = datas.p3 - offset;
+    datas.numSegments =
+      GfMax(static_cast<int>(length * NODE_CONNEXION_RESOLUTION), 1);
+  } else {
+
+    datas.p0 = start->GetPosition() + GfVec2f(startNode->GetWidth(), 0.f) + startNode->GetPosition();
+    datas.p3 = end->GetPosition() + endNode->GetPosition();
+
+    const float length = (datas.p3 - datas.p0).GetLength();
+    const GfVec2f offset(0.25f * (datas.p3[0] - datas.p0[0]), 0.f);
+
+    datas.p1 = datas.p0 + offset;
+    datas.p2 = datas.p3 - offset;
+    datas.numSegments =
+      GfMax(static_cast<int>(length * NODE_CONNEXION_RESOLUTION), 1);
+  }
   return datas;
 }
 

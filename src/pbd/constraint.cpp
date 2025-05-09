@@ -1092,6 +1092,33 @@ void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
       w = w0 + w1;
       if(w < 1e-6) continue;
 
+      GfVec3f normal = (particles->predicted[other] - particles->position[index]).GetNormalized();
+      GfVec3f vRel = (particles->velocity[other] - particles->velocity[index]);
+
+      // Compute tangential velocity
+      GfVec3f vNormal = GfDot(vRel, normal) * normal;
+      GfVec3f vTangent = vRel - vNormal;
+
+      float relSpeed = vTangent.GetLength();
+      if (relSpeed > 1e-6f) {
+        GfVec3f tangentDir = vTangent / relSpeed;
+
+        float frictionCoeff = 0.5f; // Example μ
+
+        // Friction impulse magnitude (Coulomb limit)
+        float normalImpulseMag = GfDot(vNormal, normal) * w;
+        float maxFrictionImpulse = frictionCoeff * std::abs(normalImpulseMag);
+
+        // Desired friction impulse
+        float desiredImpulse = relSpeed / w;
+        float frictionImpulseMag = std::min(desiredImpulse, maxFrictionImpulse);
+
+        // Apply impulses
+        GfVec3f frictionImpulse = -frictionImpulseMag * tangentDir;
+
+        velocity += w1 * frictionImpulse;
+      }
+
       velocity += _collision->GetContactVelocity(index, c);
 
       GfVec3f dp = particles->predicted[index] - particles->previous[index];

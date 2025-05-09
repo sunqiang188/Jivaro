@@ -83,9 +83,9 @@ _CreateSelfCollisionRestitutionAttr(UsdPbdBodyAPI &self,
 }
         
 static UsdAttribute
-_CreateSelfCollisionMaxSeparationVelocityAttr(UsdPbdBodyAPI &self,
+_CreateSelfCollisionStiffnessAttr(UsdPbdBodyAPI &self,
                                       object defaultVal, bool writeSparsely) {
-    return self.CreateSelfCollisionMaxSeparationVelocityAttr(
+    return self.CreateSelfCollisionStiffnessAttr(
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Float), writeSparsely);
 }
         
@@ -222,10 +222,10 @@ void wrapUsdPbdBodyAPI()
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
         
-        .def("GetSelfCollisionMaxSeparationVelocityAttr",
-             &This::GetSelfCollisionMaxSeparationVelocityAttr)
-        .def("CreateSelfCollisionMaxSeparationVelocityAttr",
-             &_CreateSelfCollisionMaxSeparationVelocityAttr,
+        .def("GetSelfCollisionStiffnessAttr",
+             &This::GetSelfCollisionStiffnessAttr)
+        .def("CreateSelfCollisionStiffnessAttr",
+             &_CreateSelfCollisionStiffnessAttr,
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
         

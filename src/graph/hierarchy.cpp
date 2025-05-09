@@ -60,7 +60,7 @@ HierarchyGraph::_RecurseNodes(HierarchyGraph::HierarchyNode* parent)
     parent->AddChild(node);
 
     Graph::Connexion* connexion = 
-      new Graph::Connexion(parent->GetChildrenPort(), node->GetParentPort());
+      new Graph::Connexion(parent->GetChildrenPort(), node->GetParentPort(), Graph::Connexion::PARENT);
     AddConnexion(connexion);
     _RecurseNodes(node);
   }
