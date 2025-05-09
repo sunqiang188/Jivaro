@@ -288,12 +288,14 @@ void Solver::UpdatePointsDisplay()
   for(size_t p = 0; p<numParticles; ++p)
     widths[p] = 2.f * _particles.radius[p];
 
+  /*
   size_t numCollisions = _collisions.size();
   for(size_t c = 0; c < numCollisions; ++c) {
     if(_collisions[c]->GetTypeId() == Collision::SELF) {
       _collisions[c]->GetPoints(&_particles, positions, widths, colors);
     }
   }
+  */
 
   size_t numPoints = positions.size();
   if(numPoints) {
@@ -322,24 +324,11 @@ void Solver::UpdateConstraintsDisplay()
   VtArray<GfVec3f> colors;
   VtArray<int> counts;
   
-  /*
   for(size_t c = 0; c < numConstraints; ++c) {
     if(_constraints[c]->GetTypeId() == Constraint::ATTACH) continue;
     _constraints[c]->GetPoints(&_particles, positions, widths, colors);
 
     for(size_t d = 0; d < _constraints[c]->GetNumElements(); ++d)
-      counts.push_back(2);
-  }
-  */
-
- size_t numContacts = _contacts.size();
-
-  for(size_t c = 0; c < numContacts; ++c) {
-    if(_contacts[c]->GetTypeId() != Constraint::COLLISION) continue;
-    if(((CollisionConstraint*)_contacts[c])->GetCollision()->GetTypeId() == Collision::SELF)continue;
-    size_t d = _contacts[c]->GetPoints(&_particles, positions, widths, colors);
-
-    for(size_t e = 0; e < d; ++e)
       counts.push_back(2);
   }
 
@@ -397,7 +386,6 @@ void Solver::_PrepareContacts()
     delete contact;
 
   _contacts.clear();
-
 
   for (auto& collision : _collisions)
     collision->FindContacts(&_particles, _bodies, _contacts, _frameTime);

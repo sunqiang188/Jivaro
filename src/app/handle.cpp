@@ -1037,7 +1037,9 @@ RotateHandle::_UpdateTargets(bool interacting)
   Application* app = Application::Get();
   Model* model = app->GetModel();
   UsdStageRefPtr stage = model->GetStage();
-  UsdTimeCode activeTime = UsdTimeCode::Default();
+  Time* time = Time::Get();
+  UsdTimeCode activeTime(
+    time->IsPlaying() ? UsdTimeCode::Default() : time->GetActiveTime());
   Selection* selection = app->GetModel()->GetSelection();
 
   GfMatrix4d xformMatrix;
@@ -1438,7 +1440,9 @@ ScaleHandle::_UpdateTargets(bool interacting)
   Application* app = Application::Get();
   Model* model = app->GetModel();
   UsdStageRefPtr stage = model->GetStage();
-  UsdTimeCode activeTime = UsdTimeCode::Default();
+  Time* time = Time::Get();
+  UsdTimeCode activeTime(
+    time->IsPlaying() ? UsdTimeCode::Default() : time->GetActiveTime());
   Selection* selection = app->GetModel()->GetSelection();
   if (interacting) {
     for (auto& target : _targets) {

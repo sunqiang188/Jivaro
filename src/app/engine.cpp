@@ -306,7 +306,7 @@ Engine::_PrepareDefaultLighting()
 void 
 Engine::Prepare()
 {
-  _PrepareDefaultLighting();
+  //_PrepareDefaultLighting();
   _taskController->SetFreeCameraMatrices(_camView, _camProj);
 
 /*

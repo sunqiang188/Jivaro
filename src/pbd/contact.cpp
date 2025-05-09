@@ -27,6 +27,7 @@ void Contact::Init(Collision* collision, Particles* particles, size_t index)
     _normal = selfCollision->GetGradient(particles, index, other);
   }
 
+  if(_initDepth>-0.0001f)_initDepth = 0.f;
   _depth = _initDepth;
 
   _state = _depth < collision->GetMargin() ? ACTIVE : DISCARD;

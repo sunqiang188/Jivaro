@@ -117,6 +117,9 @@ void Collision::_FindContacts(Particles* particles, size_t begin, size_t end, fl
     Contact* contact = _contacts.Get(index);
     if(!contact->IsTouching()) 
       _FindContact(particles, index, ft);
+
+    _t = 0.f;
+    contact->Init(this, particles, index);
   }
 }
 
@@ -857,6 +860,15 @@ void SelfCollision::_UpdateParameters(const UsdPrim& prim, double time)
 {
   // this is not correct, self-collision attributes live on body geometry, not solver
   UsdPbdCollisionAPI api(prim);
+
+  _enabled = true;
+  _restitution = 0.0f;
+  _friction = 0.0f;
+  _damp = 0.0f;
+  _margin = 0.001f;
+  _maxSeparationVelocity = 0.f;
+  _stiffness = 0.f;
+  /*
   api.GetCollisionEnabledAttr().Get(&_enabled, time);
   api.GetRestitutionAttr().Get(&_restitution, time);
   api.GetFrictionAttr().Get(&_friction, time);
@@ -864,6 +876,7 @@ void SelfCollision::_UpdateParameters(const UsdPrim& prim, double time)
   api.GetMarginAttr().Get(&_margin, time);
   api.GetMaxSeparationVelocityAttr().Get(&_maxSeparationVelocity, time);
   api.GetCollisionStiffnessAttr().Get(&_stiffness);
+  */
 }
 
 void SelfCollision::Update(const UsdPrim& prim, double time)
@@ -915,8 +928,6 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
   size_t numCollide = 0;
   _grid.Closests(index, &particles->predicted[0], /*&particles->velocity[0], ft,*/
     closests,  2.f * ( particles->radius[index] * radiusMultiplier + TOLERANCE_MARGIN));
-
-  std::cout << "particle " << index << " closests points : " << closests.size() << std::endl;
   
   for(int closest: closests) {
     if(numCollide >= PARTICLE_MAX_CONTACTS)break;
@@ -932,11 +943,15 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
       Contact* contact = _contacts.Use(index);
       contact->SetComponentIndex(closest);
       contact->SetActive(true);
+
+      _t = 0.f;
+      contact->Init(this, particles, index);
+      
       numCollide++;
     }
+    
   }
 
-  std::cout << "particle " << index << " collide with " << numCollide << " neighbors..." << std::endl;
 }
 
 void SelfCollision::UpdateContacts(Particles* particles, float t)
@@ -974,33 +989,32 @@ void SelfCollision::_UpdateContacts(Particles* particles, size_t begin, size_t e
 void SelfCollision::_BuildContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
   std::vector<Constraint*>& constraints)
 {
-  size_t numSelfCollisionConstraints = 0;
   CollisionConstraint* constraint = NULL;
   size_t numParticles = particles->GetNumParticles();
+
   size_t numContacts = _contacts.GetTotalNumUsed();
 
   VtArray<int> elements;
+  elements.reserve(Constraint::BlockSize);
  
   size_t contactsOffset = 0;
   size_t contactIdx = 0;
   Mask::Iterator iterator(this, 0, numParticles);
   size_t index = iterator.Begin();
-  size_t numConstraints = 0;
 
   for (; index != Mask::INVALID_INDEX; index = iterator.Next()) {
     size_t numUsed = _contacts.GetNumUsed(index);
-    if(numUsed)
-      elements.push_back(index);   
-  
-    if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
-      constraint = new CollisionConstraint(particles, this, elements);
-      constraints.push_back(constraint);
-      elements.clear();
-      numConstraints++;
+    if(numUsed) elements.push_back(index);      
     
+    
+    if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
+      if (elements.size()) {
+        constraint = new CollisionConstraint(particles, this, elements);
+        constraints.push_back(constraint);
+        elements.clear();
+      } 
     }
   }
-  std::cout << "Created " << numConstraints << " collision constraints" << std::endl;
 }
 
 void SelfCollision::_UpdateAccelerationStructure()
