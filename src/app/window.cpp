@@ -241,7 +241,7 @@ Window::Resize(unsigned width, unsigned height)
   _width = width;
   _height = height;
 
-  CollectLeaves();
+  CollectLeafViews();
   _mainView->Resize(0, 0, _width, _height);
   _splitter->Resize(_width, _height);
 
@@ -457,23 +457,23 @@ Window::RemoveView(View* view)
 
 // collect child leaves views from specified view
 //----------------------------------------------------------------------------
-void _CollectLeaves(std::vector<View*>& views, std::vector<View*>& leaves, View* view)
+void _CollectLeafViews(std::vector<View*>& views, std::vector<View*>& leaves, View* view)
 {
   views.push_back(view);
   if (view->GetFlag(View::LEAF)) {
     leaves.push_back(view);
   } else {
-    if (view->GetLeft())_CollectLeaves(views, leaves, view->GetLeft());
-    if (view->GetRight())_CollectLeaves(views, leaves, view->GetRight());
+    if (view->GetLeft())_CollectLeafViews(views, leaves, view->GetLeft());
+    if (view->GetRight())_CollectLeafViews(views, leaves, view->GetRight());
   }
 }
 
 void 
-Window::CollectLeaves()
+Window::CollectLeafViews()
 {
   _leaves.clear();
   _views.clear();
-  _CollectLeaves(_views, _leaves, _mainView);
+  _CollectLeafViews(_views, _leaves, _mainView);
 }
 
 // get view (leaf) under mouse

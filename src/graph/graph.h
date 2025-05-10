@@ -5,6 +5,7 @@
 #include "pxr/base/tf/type.h"
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/usd/relationship.h>
 #include <pxr/usd/usd/prim.h>
 #include "../common.h"
 
@@ -48,6 +49,8 @@ public:
       Port() {};
       Port(Node* node, size_t flag, const TfToken& label, 
         UsdAttribute& attribute);
+        Port(Node* node, size_t flag, const TfToken& label, 
+          UsdRelationship& relationship);
       Port(Node* node, size_t flag, const TfToken& label);
 
       bool IsInput() { return _flags & INPUT; };
@@ -59,8 +62,10 @@ public:
       const Node* GetNode() const { return _node; };
       Node* GetNode() { return _node; };
       void SetNode(Node* node) { _node = node; };
-      const UsdAttribute& GetAttr() const { return _attr;};
-      UsdAttribute& GetAttr() { return _attr;};
+      UsdAttribute& GetAttr(){return _attr;};
+      const UsdAttribute& GetAttr() const{return _attr;};
+      UsdRelationship& GetRelationship(){return _relationship;};
+      const UsdRelationship& GetRelationship() const{return _relationship;};
       size_t GetFlags() { return _flags; };
       TfToken GetLabel() { return _label; };
       bool IsConnected(Graph* graph, Connexion* foundConnexion);
@@ -70,7 +75,9 @@ public:
       TfToken               _label;
       size_t                _flags;
       UsdAttribute          _attr;
+      UsdRelationship       _relationship;
   };
+
 
   // Graph connexion class
   //-------------------------------------------------------------------
@@ -111,8 +118,10 @@ public:
         size_t flags=Port::INPUT|Port::HORIZONTAL);
       void AddOutput(UsdAttribute& attribute, const TfToken& name, 
         size_t flags=Port::OUTPUT|Port::HORIZONTAL);
-      void AddPort(UsdAttribute& attribute, const TfToken& name, 
+      void AddAttribute(UsdAttribute& attribute, const TfToken& name, 
         size_t flags=Port::INPUT|Port::OUTPUT|Port::HORIZONTAL);
+      void AddRelationship(UsdRelationship& relationship, const TfToken& name, 
+          size_t flags=Port::INPUT|Port::HORIZONTAL);
 
       size_t GetNumPorts() { return _ports.size(); };
       std::vector<Port>& GetPorts() { return _ports; };

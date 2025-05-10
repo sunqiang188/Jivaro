@@ -144,6 +144,19 @@ void Particles::SetBodyState(Body* item, short s)
   }
 }
 
+void Particles::ComputeBoundingBox()
+{
+  GfVec3f minimum(FLT_MAX);
+  GfVec3f maximum(-FLT_MAX);
+
+  for(size_t p=0; p < num; ++p)
+    for(size_t a=0; a < 3; ++a) {
+      if(minimum[a] > position[p][a])minimum[a] = position[p][a];
+      if(maximum[a] < position[p][a])maximum[a] = position[p][a];
+    }
+  range = GfRange3f(minimum, maximum);
+}
+
 Body::~Body()
 {
   for (auto& constraint : _constraints)
@@ -230,6 +243,7 @@ void Body::UpdateParameters(UsdPrim& prim, float time)
 
 void Body::UpdateParticles(Particles* particles)
 {
+  GfRange3f bbox = particles->GetBoundingBox();
   for(size_t p = _offset; p < _offset + _numPoints; ++p) {
     if(!_simulationEnabled)
       particles->state[p] = Particles::MUTE;
@@ -237,8 +251,9 @@ void Body::UpdateParticles(Particles* particles)
       particles->state[p] = Particles::ACTIVE;
 
     particles->radius[p] = _radius;
-    particles->mass[p] = _mass;
-    particles->invMass[p] = _mass > 1e-9 ? 1.f/_mass : 0.f;
+    const float bY = RESCALE(particles->position[p][1], bbox.GetMin()[1], bbox.GetMax()[1], 1.f, 0.95f);
+    particles->mass[p] = _mass * bY;
+    particles->invMass[p] = particles->mass[p] > 1e-9 ? 1.f/particles->mass[p] : 0.f;
   }
 }
 

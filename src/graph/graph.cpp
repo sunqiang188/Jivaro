@@ -8,7 +8,7 @@
 #include <pxr/usd/sdf/types.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/attribute.h>
-#include <pxr/usd/ndr/property.h>
+#include <pxr/usd/usd/relationship.h>
 #include <pxr/usd/ndr/node.h>
 #include <pxr/usd/usd/schemaRegistry.h>
 #include <pxr/usd/usd/primDefinition.h>
@@ -44,13 +44,21 @@ Graph::Node::Node(UsdPrim& prim)
       std::cout << infos.GetTypeName() << std::endl;
 
       TfType primType = UsdSchemaRegistry::GetTypeFromName(infos.GetTypeName());
-      std::cout << "Prim Type : " << primType.GetTypeName() << std::endl;
       const UsdPrimDefinition& primDef = _prim.GetPrimDefinition();
       for(auto& propName: primDef.GetPropertyNames()) {
-        std::cout << propName << std::endl;
-        UsdAttribute attribute = _prim.GetAttribute(propName);
-        Graph::Node::AddInput(attribute, propName, Graph::Port::INPUT|Graph::Port::HORIZONTAL);
-        std::cout << "attribute : " << prim.GetPath() << " " << propName << std::endl;
+        UsdProperty prop = _prim.GetProperty(propName);
+        if (prop.Is<UsdAttribute>()) {
+          std::cout << prop.GetName() << " is an Attribute" << std::endl;
+          UsdAttribute attribute = _prim.GetAttribute(propName);
+          Graph::Node::AddAttribute(attribute, propName, Graph::Port::OUTPUT|Graph::Port::HORIZONTAL);
+        } else if (prop.Is<UsdRelationship>()) {
+          std::cout << prop.GetName() << " is a Relationship" << std::endl;
+          UsdRelationship relationship = _prim.GetRelationship(propName);
+          Graph::Node::AddRelationship(relationship, propName, Graph::Port::INPUT|Graph::Port::HORIZONTAL);
+        } else {
+          std::cout << prop.GetName() << " is an unknown Property type" << std::endl;
+        }
+        
       }
 
       /*
@@ -131,14 +139,24 @@ Graph::Node::AddOutput(UsdAttribute& attribute, const TfToken& name, size_t flag
   _ports.push_back(port);
 }
 
-// Node add io port
+// Node add attribute port
 //------------------------------------------------------------------------------
 void
-Graph::Node::AddPort(UsdAttribute& attribute, const TfToken& name, size_t flags)
+Graph::Node::AddAttribute(UsdAttribute& attribute, const TfToken& name, size_t flags)
 {
   Graph::Port port(this, flags, name, attribute);
   _ports.push_back(port);
 }
+
+// Node add io port
+//------------------------------------------------------------------------------
+void
+Graph::Node::AddRelationship(UsdRelationship& relationship, const TfToken& name, size_t flags)
+{
+  Graph::Port port(this, flags, name, relationship);
+  _ports.push_back(port);
+}
+
 
 
 // Node get port
@@ -171,6 +189,13 @@ Graph::Port::Port(Graph::Node* node, size_t flags,
   : _node(node), _flags(flags), _label(label), _attr(attr)
 {
 }
+
+Graph::Port::Port(Graph::Node* node, size_t flags, 
+  const TfToken& label, UsdRelationship& relationship)
+  : _node(node), _flags(flags), _label(label), _relationship(relationship)
+{
+}
+
 
 Graph::Port::Port(Graph::Node* node, size_t flags,
   const TfToken& label)

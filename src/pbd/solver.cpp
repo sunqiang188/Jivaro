@@ -590,6 +590,8 @@ void Solver::Reset(UsdStageRefPtr& stage)
   for(auto& collision: _collisions)
     collision->Reset();
 
+  _particles.ComputeBoundingBox();
+
   _initialized = true;
 }
 
@@ -610,6 +612,8 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   _PrepareContacts();
 
   for(size_t si = 0; si < _subSteps; ++si) {
+
+    _particles.ComputeBoundingBox();
 
     //_timer->Start(1);
     // integrate particles

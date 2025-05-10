@@ -6,6 +6,7 @@
 #include <pxr/base/gf/bbox3d.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/range3f.h>
 
 #include "../common.h"
 #include "../geometry/smooth.h"
@@ -127,15 +128,19 @@ struct Particles
   ~Particles();
 
   size_t GetNumParticles() {return num; };
+  const GfRange3f& GetBoundingBox() const {return range;};
   void AddBody(Body* body, const GfMatrix4d& matrix);
   void RemoveBody(Body* body);
   void RemoveAllBodies();
+
+  void ComputeBoundingBox();
 
   void SetAllState(short state);
   void SetBodyState(Body* body, short state);
 
   void _EnsureDataSize(size_t size);
 
+  GfRange3f      range;
   short*         state;
   Body**         body;
   float*         mass;

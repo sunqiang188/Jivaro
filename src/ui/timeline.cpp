@@ -269,6 +269,16 @@ void TimelineUI::DrawControls()
 
 void TimelineUI::DrawTimeSlider()
 {
+  UsdStageRefPtr stage = GetModel()->GetStage();
+  Selection* selection = GetModel()->GetSelection();
+  for(auto& item: selection->GetItems()){
+    if(item.type != Selection::PRIM) continue;
+
+    UsdPrim prim = stage->GetPrimAtPath(item.path);
+    if(!prim.IsA<UsdGeomXformable>()) continue;
+
+    
+  }
   ImDrawList* drawList = ImGui::GetWindowDrawList();
 
   float xmin = _parent->GetMin()[0];

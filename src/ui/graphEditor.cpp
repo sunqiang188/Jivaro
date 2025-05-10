@@ -5,6 +5,7 @@
 #include <pxr/usd/usd/primRange.h>
 #include <pxr/usd/usd/modelAPI.h>
 #include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/usd/property.h>
 #include <pxr/usd/ndr/property.h>
 #include <pxr/usd/ndr/node.h>
 #include <pxr/usd/usdShade/shader.h>
@@ -14,6 +15,7 @@
 #include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
 #include <pxr/usd/usdUI/backdrop.h>
 #include <pxr/usd/usdUI/tokens.h>
+
 
 #include "../common.h"
 #include "../utils/timer.h"
@@ -673,6 +675,41 @@ GraphEditorUI::Node::Draw(GraphEditorUI* editor)
         expendPos, 
         expendPos + elementSize, 
         expendColor, 0);
+
+        /*
+        std::vector<UsdProperty> props = prim.GetProperties();
+    
+        for (const UsdProperty& prop : props) {
+            std::string name = prop.GetName().GetString();
+    
+            if (prop.Is<UsdAttribute>()) {
+                UsdAttribute attr = UsdAttribute(prop);
+                TfType type = attr.GetTypeName().GetType();
+    
+                // Display type info and time-sampled status
+                bool isTimeVarying = attr.ValueMightBeTimeVarying();
+    
+                ImGui::Text("Attr: %s [%s] %s", 
+                    name.c_str(),
+                    attr.GetTypeName().GetAsToken().GetText(),
+                    isTimeVarying ? "(TimeVarying)" : "");
+    
+                // Optional: Display default value if it exists
+                VtValue val;
+                if (attr.Get(&val)) {
+                    ImGui::Text("   Default: %s", val.GetTypeName().c_str());
+                }
+            }
+            else if (prop.Is<UsdRelationship>()) {
+                UsdRelationship rel = UsdRelationship(prop);
+                SdfPathVector targets;
+                rel.GetTargets(&targets);
+    
+                ImGui::Text("Rel: %s -> %zu targets", name.c_str(), targets.size());
+            }
+        }
+        */
+        
     
     // ports
     Graph::Connexion* connexion = NULL;

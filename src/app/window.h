@@ -126,7 +126,7 @@ public:
   View* GetActiveView(){return _activeView;};
   View* GetHoveredView() { return _hoveredView; };
   View* GetViewUnderMouse(int x, int y);
-  void CollectLeaves();
+  void CollectLeafViews();
   const std::vector<View*>& GetLeaves();
   const std::vector<View*>& GetViews();
   void DirtyViewsUnderBox(const GfVec2f& min, const GfVec2f& size);
