@@ -1,0 +1,76 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "Three.js USDZExporter"
+    }
+    defaultPrim = "Object_4"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Object_4"
+{
+    matrix4d xformOp:transform = ( (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1) )
+    uniform token[] xformOpOrder = ["xformOp:transform"]
+
+    def Xform "mesh_0" (
+        prepend references = @./geometries/Geometry_1.usd@</Geometry>
+    )
+    {
+        rel material:binding = </Material_2>
+        matrix4d xformOp:transform = ( (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1) )
+        uniform token[] xformOpOrder = ["xformOp:transform"]
+    }
+}
+
+def Material "Material_2"
+{
+    token inputs:frame:stPrimvarName = "st"
+    token outputs:surface.connect = </Material_2/PreviewSurface.outputs:surface>
+
+    def Shader "PreviewSurface"
+    {
+        uniform token info:id = "UsdPreviewSurface"
+        color3f inputs:diffuseColor.connect = </Material_2/Texture_4_diffuse.outputs:rgb>
+        float inputs:metallic = 0
+        float inputs:opacity = 1
+        float inputs:roughness = 1
+        int inputs:useSpecularWorkflow = 0
+        token outputs:surface
+    }
+
+    def Shader "uvReader_st"
+    {
+        uniform token info:id = "UsdPrimvarReader_float2"
+        float2 inputs:fallback = (0, 0)
+        token inputs:varname.connect = </Material_2.inputs:frame:stPrimvarName>
+        float2 outputs:result
+    }
+
+    def Shader "Transform2d_diffuse" (
+        sdrMetadata = {
+            string role = "math"
+        }
+    )
+    {
+        uniform token info:id = "UsdTransform2d"
+        float2 inputs:in.connect = </Material_2/uvReader_st.outputs:result>
+        float2 inputs:scale = (1, 1)
+        float2 inputs:translation = (0, 0)
+        float2 outputs:result
+    }
+
+    def Shader "Texture_4_diffuse"
+    {
+        uniform token info:id = "UsdUVTexture"
+        asset inputs:file = @textures/Texture_4_ffffff.png@
+        float2 inputs:st.connect = </Material_2/Transform2d_diffuse.outputs:result>
+        token inputs:wrapS = "repeat"
+        token inputs:wrapT = "repeat"
+        float outputs:b
+        float outputs:g
+        float outputs:r
+        float3 outputs:rgb
+    }
+}
+

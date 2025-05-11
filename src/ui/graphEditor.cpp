@@ -283,9 +283,12 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
   static const ImVec2 outputPortOffset(
     - NODE_PORT_RADIUS * scale, NODE_PORT_RADIUS * scale);
 
-  portTextOffset = ImGui::CalcTextSize(_port->GetLabel().GetText());
+  //portTextOffset = ImGui::CalcTextSize(_port->GetLabel().GetText());
   portTextOffset.x = -NODE_PORT_RADIUS * 2.f * scale;
   portTextOffset.y -= NODE_PORT_VERTICAL_SPACING * 0.5f * scale;
+
+  if(Get()->GetFlags() & Graph::Port::OUTPUT)
+    portTextOffset.x += GetNode()->GetWidth() * scale;
 
   if(Get()->GetFlags() & Graph::Port::HORIZONTAL) {
     drawList->AddText(
@@ -293,28 +296,20 @@ GraphEditorUI::Port::Draw(GraphEditorUI* editor)
     ImColor(0, 0, 0, 255),
     _port->GetLabel().GetText());
 
-    if(Get()->GetFlags() & Graph::Port::INPUT) {
+    if(Get()->GetFlags()) {
       drawList->AddCircleFilled(
         p + _pos * scale,
         GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
         _color
       );
     }
-
-    if (Get()->GetFlags() & Graph::Port::OUTPUT) {
-      drawList->AddCircleFilled(
-        p + (_pos + GfVec2f(_node->GetWidth(), 0.f)) * scale,
-        GetState(ITEM_STATE_HOVERED) ? NODE_PORT_RADIUS * scale * 1.2f : NODE_PORT_RADIUS * scale,
-        _color
-      );
-    }
   } else {
-
+    size_t hovered = GetState(ITEM_STATE_HOVERED) ? 2 : 0;
     drawList->AddRectFilled(
-      p + GfVec2f(_node->GetWidth()/2.f - NODE_PORT_RADIUS, 
-        (Get()->GetFlags() & Graph::Port::INPUT ? 0.f : _node->GetHeight()) - NODE_PORT_RADIUS) * scale,
-      p + GfVec2f(_node->GetWidth()/2.f + NODE_PORT_RADIUS, 
-        (Get()->GetFlags() & Graph::Port::INPUT ? 0.f : _node->GetHeight()) + NODE_PORT_RADIUS) * scale,
+      p + GfVec2f(_node->GetWidth()/2.f - NODE_PORT_RADIUS - hovered, 
+        (Get()->GetFlags() & Graph::Port::INPUT ? 0.f : _node->GetHeight()) - NODE_PORT_RADIUS - hovered) * scale,
+      p + GfVec2f(_node->GetWidth()/2.f + NODE_PORT_RADIUS + hovered, 
+        (Get()->GetFlags() & Graph::Port::INPUT ? 0.f : _node->GetHeight()) + NODE_PORT_RADIUS + hovered) * scale,
       _color,
       NODE_CORNER_ROUNDING * scale,
       ImDrawCornerFlags_All
@@ -449,6 +444,19 @@ GraphEditorUI::Node::~Node()
 {
 }
 
+// Check point inside
+//------------------------------------------------------------------------------
+bool 
+GraphEditorUI::Node::Contains(const GfVec2f& pos, 
+  const GfVec2f& extend)
+{
+  if (pos[0] >= _pos[0] - extend[0] &&
+    pos[0] <= _pos[0] + _width + extend[0] &&
+    pos[1] >= _pos[1] - extend[1] &&
+    pos[1] <= _pos[1] + _height + extend[1])return true;
+  return false;
+}
+
 
 GraphEditorUI::Port* 
 GraphEditorUI::Node::GetPort(const TfToken& name)
@@ -465,11 +473,8 @@ GraphEditorUI::Node::GetElementUnderMouse(GraphEditorUI* editor, const GfVec2f& 
   GfVec2f viewPos;
   editor->GetRelativeMousePosition(mousePos[0], mousePos[1], viewPos[0], viewPos[1]);
 
-  std::cout << viewPos << " vs " << _pos << std::endl;
-  if(viewPos[1] - _pos[1] < _size[1]) {
-    
+  if(viewPos[1] - _pos[1] < _size[1])
     return 1;
-  }
     
   return 1;
 }
@@ -493,23 +498,27 @@ GraphEditorUI::Node::ComputeSize(GraphEditorUI* editor)
     float mid = _height * 0.5;
 
     Graph::Connexion* connexion = NULL;
+
+   
     
     for (auto& port : _ports) {
       if(port.Get()->GetFlags() & Graph::Port::VERTICAL) 
         continue;
-      
+
+      float posX = port.Get()->GetFlags() & Graph::Port::INPUT ? 0.f :  GetWidth();
+
       if(port.Get()->GetFlags() & Graph::Port::HORIZONTAL) {
         if(_expended == UsdUITokens->closed) {
-          port.SetPosition(GfVec2f(0.f, mid));
+          port.SetPosition(GfVec2f(posX, mid));
         } else if(_expended == UsdUITokens->minimized) {
           if (port.IsConnected(editor, connexion)) {
-            port.SetPosition(GfVec2f(0.f, _height));
+            port.SetPosition(GfVec2f(posX, _height));
             _height += NODE_PORT_VERTICAL_SPACING;
           }
           else 
-            port.SetPosition(GfVec2f(0.f, mid));
+            port.SetPosition(GfVec2f(posX, mid));
         } else if(_expended == UsdUITokens->open) {
-          port.SetPosition(GfVec2f(0.f, _height));
+          port.SetPosition(GfVec2f(posX, _height));
           _height += NODE_PORT_VERTICAL_SPACING;
         }
       }
@@ -1020,7 +1029,7 @@ GraphEditorUI::Draw()
       const GraphEditorUI::Node* startNode = _connector.startPort->GetNode();
       const GfVec2f viewPos = GetPosition();
       GfVec2f portPos = _connector.startPort->GetPosition();
-      if (_connector.inputOrOutput) portPos += GfVec2f(startNode->GetWidth(), 0.f);
+      /*if (_connector.inputOrOutput) portPos += GfVec2f(startNode->GetWidth(), 0.f);*/
       const GfVec2f startPos = GridPositionToViewPosition(portPos + startNode->GetPosition());
       const GfVec2f endPos = ImGui::GetMousePos();
       const GfVec2f
@@ -1180,9 +1189,9 @@ GraphEditorUI::_GetNodeUnderMouse(const GfVec2f& mousePos, bool useExtend)
       break;
     }
   }
-  if (_hoveredNode && _hoveredNode != hovered) {
+  if (_hoveredNode && _hoveredNode != hovered) 
     _hoveredNode->SetState(ITEM_STATE_HOVERED, false);
-  }
+  
   if (hovered) {
     hovered->SetState(ITEM_STATE_HOVERED, true);
     _hoveredNode = hovered;
@@ -1198,6 +1207,8 @@ GraphEditorUI::_GetNodeUnderMouse(const GfVec2f& mousePos, bool useExtend)
     _GetPortUnderMouse(viewPos, _hoveredNode);
   }
 
+  
+
   _GetConnexionUnderMouse(viewPos);
   if (_hoveredConnexion)_parent->SetDirty();
 }
@@ -1205,38 +1216,26 @@ GraphEditorUI::_GetNodeUnderMouse(const GfVec2f& mousePos, bool useExtend)
 void 
 GraphEditorUI::_GetPortUnderMouse(const GfVec2f& mousePos, Node* node)
 {
+  
   const GfVec2f relativePosition =
     ViewPositionToGridPosition(mousePos) - node->GetPosition();
 
-  if (relativePosition[1] < node->GetHeight() - NODE_PORT_RADIUS ||
-    (relativePosition[0] > NODE_PORT_RADIUS &&
-      relativePosition[0] < node->GetWidth() - NODE_PORT_RADIUS)) return;
+  _hoveredPort = NULL;
+  _inputOrOutput = -1;
 
-  size_t portIndex =
-    int((relativePosition[1] - (
-      (NODE_HEADER_HEIGHT + NODE_HEADER_PADDING) - NODE_PORT_RADIUS)) / 
-        (float)NODE_PORT_VERTICAL_SPACING);
-
-  size_t numPorts = node->Get()->GetNumPorts();
-
-  if (portIndex >= numPorts) return;
-
-  Port* port = NULL;
-  port = &(node->GetPorts()[portIndex]);
-
-  if (port->Contains(relativePosition) && 
-    port->Get()->GetFlags() & Graph::Port::INPUT) {
-    port->SetState(ITEM_STATE_HOVERED, true);
-    _hoveredPort = port;
-    _inputOrOutput = 0;
-  } else if (port->Contains(relativePosition - GfVec2f(node->GetWidth(), 0.f)) && 
-    port->Get()->GetFlags() & Graph::Port::OUTPUT) {
-    port->SetState(ITEM_STATE_HOVERED, true);
-    _hoveredPort = port;
-    _inputOrOutput = 1;
-  } else {
-    _hoveredPort = NULL;
-    _inputOrOutput = -1;
+  for(auto& port: node->GetPorts()) {
+    if (port.Contains(relativePosition)) {
+        port.SetState(ITEM_STATE_HOVERED, true);
+        _hoveredPort = &port;
+        _inputOrOutput = port.Get()->GetFlags() & Graph::Port::OUTPUT;
+        break;
+      }
+   else if(port.Contains(relativePosition - GfVec2f(node->GetWidth(), 0.f))) {
+        port.SetState(ITEM_STATE_HOVERED, true);
+        _hoveredPort = &port;
+        _inputOrOutput = port.Get()->GetFlags() & Graph::Port::OUTPUT;
+        break;
+      }
   }
 }
 
@@ -1508,15 +1507,18 @@ GraphEditorUI::UpdateConnexion()
 void 
 GraphEditorUI::EndConnexion()
 {
+  
   if (_connector.startPort && _connector.endPort) {
-    if (!_connector.inputOrOutput) {
-      ADD_COMMAND(ConnectNodeCommand, _model->GetStage(),
-        _connector.endPort->Get()->GetPath(), _connector.startPort->Get()->GetPath());
-    }
-    else {
-      ADD_COMMAND(ConnectNodeCommand, _model->GetStage(),
-        _connector.startPort->Get()->GetPath(), _connector.endPort->Get()->GetPath());
-    }
+    Graph::Port* sp = _connector.startPort->Get();
+    Graph::Port* ep = _connector.endPort->Get();
+
+    if((sp->GetFlags() & Graph::Port::OUTPUT) && (ep->GetFlags() & Graph::Port::INPUT)) {
+      ADD_COMMAND(ConnectNodeCommand, _model->GetStage(), ep->GetPath(), sp->GetPath());
+    } else if((sp->GetFlags() & Graph::Port::INPUT) && (ep->GetFlags() & Graph::Port::OUTPUT)) {
+      ADD_COMMAND(ConnectNodeCommand, _model->GetStage(), sp->GetPath(), ep->GetPath());
+    } else
+      TF_WARN("Can not create connexion !!!");
+    
   }
   _connect = false;
   _connector.startPort = _connector.endPort = NULL;

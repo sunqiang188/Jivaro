@@ -324,15 +324,39 @@ bool CommandsUI::Draw()
     }
   } 
 
+  if (ImGui::Button("Set Default Prim")) {
+    UndoBlock block;
+    Selection* selection = _model->GetSelection();
+    for(auto& item: selection->GetItems()) {
+      if(item.type == Selection::PRIM){
+        UsdPrim prim = stage->GetPrimAtPath(item.path);
+        stage->SetDefaultPrim(prim);
+        break;
+      } 
+    }
+  } 
+
   static float gridWidth = 1.f;
   static float gridHeight = 1.f;
   static int gridSubdivWidth = 32;
   static int gridSubdivHeight = 32;
 
-  ImGui::SetNextItemWidth(120);ImGui::InputFloat("Grid Width", &gridWidth); ImGui::SameLine();
-  ImGui::SetNextItemWidth(120);ImGui::InputFloat("Grid Height", &gridHeight); ImGui::SameLine();
-  ImGui::SetNextItemWidth(120);ImGui::InputInt("Grid Subdiv Width", &gridSubdivWidth); ImGui::SameLine();
-  ImGui::SetNextItemWidth(120);ImGui::InputInt("Grid Subdiv Height", &gridSubdivHeight); ImGui::SameLine();
+  ImGui::SetNextItemWidth(120);
+  ImGui::InputFloat("Grid Width", &gridWidth); 
+  ImGui::SameLine();
+
+  ImGui::SetNextItemWidth(120);
+  ImGui::InputFloat("Grid Height", &gridHeight);
+  ImGui::SameLine();
+
+  ImGui::SetNextItemWidth(120);
+  ImGui::InputInt("Grid Subdiv Width", &gridSubdivWidth); 
+  ImGui::SameLine();
+
+  ImGui::SetNextItemWidth(120);
+  ImGui::InputInt("Grid Subdiv Height", &gridSubdivHeight); 
+  ImGui::SameLine();
+
   if(ImGui::Button("Create Grid")) {
     Mesh mesh;
     mesh.RegularGrid2D(gridSubdivWidth, gridSubdivHeight, gridWidth, gridHeight);

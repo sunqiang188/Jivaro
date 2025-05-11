@@ -72,8 +72,8 @@ void AddClothCallback()
   Selection* selection = model->GetSelection();
   if(!selection->GetNumSelectedItems()) {
     Mesh mesh;
-    mesh.TriangularGrid2D(spacing);
-    //mesh->RegularGrid2D(spacing);
+    //mesh.TriangularGrid2D(spacing);
+    mesh.RegularGrid2D(spacing);
     //mesh.Randomize(0.1f);
 
     // get root prim
@@ -102,7 +102,8 @@ void AddClothCallback()
   }
   else {
     for(size_t s = 0; s < selection->GetNumSelectedItems(); ++s) {
-      prim = stage->GetPrimAtPath((*selection)[0].path);
+      Selection::Item& item = selection->GetItem(s);
+      prim = stage->GetPrimAtPath(item.path);
       UsdPbdBodyAPI::Apply(prim);
       UsdPbdConstraintAPI::Apply(prim, TfToken("attach"));
       UsdPbdConstraintAPI::Apply(prim, TfToken("stretch"));

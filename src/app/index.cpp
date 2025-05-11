@@ -38,9 +38,9 @@ Index::~Index()
 void
 Index::SetStage(UsdStageRefPtr& stage)
 {
-  _stage = stage;
-  _stageSceneIndex->SetStage(_stage);
+  _stageSceneIndex->SetStage(stage);
   _stageSceneIndex->SetTime(UsdTimeCode::Default());
+  _stage = stage;
 }
 
 void

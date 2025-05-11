@@ -210,6 +210,9 @@ protected:
       Node(Graph::Node* node);
       ~Node();
 
+      bool Contains(const GfVec2f& position, 
+        const GfVec2f& extend = GfVec2f(0,0)) override;
+
       void SetColor(const GfVec3f& color) override;
       bool IsVisible(GraphEditorUI* editor) override;
       void Draw(GraphEditorUI* graph) override;

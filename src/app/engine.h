@@ -46,10 +46,12 @@ public:
     bool enableSceneMaterials;
     bool enableSceneLights;
     bool enableClipping;
+    bool gammaCorrectColors;
     GfVec3f maskColor;
     GfVec3f indicatorColor;
     float pointSelectedSize;
     float alphaThreshold;
+
 
     SdfPath camera;
     CameraUtilFraming framing;

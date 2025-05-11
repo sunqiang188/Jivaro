@@ -1,0 +1,20 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+)
+
+def Xform "Root"
+{
+    def "Robot" (
+        prepend references = @/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/skinny_tall_and_made_0511125711_texture.usdz@
+    )
+    {
+    }
+
+    def "Weed" (
+        prepend references = @/Users/malartrebenjamin/Documents/RnD/Jivaro/assets/big_bud_cannabis_sati_0511130539_texture.usdz@
+    )
+    {
+    }
+}
+

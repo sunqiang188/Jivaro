@@ -781,7 +781,7 @@ DihedralConstraint::DihedralConstraint(Body* body, const VtArray<int>& elems,
     GfVec3f n1 = GfCross(x1 - x0, x2 - x0).GetNormalized();
     GfVec3f n2 = GfCross(x1 - x0, x3 - x0).GetNormalized();
 
-    float dot = GfClamp(GfDot(n1, n2), 0.f, 1.f);
+    float dot = std::clamp(GfDot(n1, n2), -1.0f, 1.0f);
 
     _rest[elemIdx] = std::acos(dot);
   }
@@ -789,12 +789,16 @@ DihedralConstraint::DihedralConstraint(Body* body, const VtArray<int>& elems,
 
 void DihedralConstraint::SolvePosition(Particles* particles, float dt)
 {
+  const float eps = 1e-6f;
+
   _ResetCorrection();
 
   size_t numElements = _elements.size() / ELEM_SIZE;
   size_t a, b, c, d;
   GfVec3f x0, x1, x2, x3, n1, n2, q0, q1, q2, q3;
-  float w0, w1, w2, w3, dot, angle, lambda;
+  // Compute gradients
+  GfVec3f grad0, grad1, grad2, grad3;
+  float w0, w1, w2, w3, dot, sign, angle, lambda;
 
   float alpha = _compliance / dt / dt;
   
@@ -806,23 +810,72 @@ void DihedralConstraint::SolvePosition(Particles* particles, float dt)
     d = _elements[elem * ELEM_SIZE + 3];
 
     x0 = particles->predicted[a];
-    x1 = particles->predicted[b] - x0;
-    x2 = particles->predicted[c] - x0;
-    x3 = particles->predicted[d] - x0;
+    x1 = particles->predicted[b];
+    x2 = particles->predicted[c];
+    x3 = particles->predicted[d];
 
     w0 = particles->invMass[a];
     w1 = particles->invMass[b];
     w2 = particles->invMass[c];
     w3 = particles->invMass[d];
 
-    n1 = GfCross(x1, x2);
-    n2 = GfCross(x1, x3);
+    GfVec3f n1_un = GfCross(x2 - x0, x2 - x1);
+    GfVec3f n2_un = GfCross(x3 - x1, x3 - x0);
 
-    n1.Normalize();
-    n2.Normalize();
-    dot = GfClamp(GfDot(n1, n2), 0.f, 1.f);
+    float len1 = n1_un.GetLength();
+    float len2 = n2_un.GetLength();
 
-    angle = std::acos(dot);	
+    if (len1 < 1e-6f || len2 < 1e-6f) return;
+
+    GfVec3f n1 = n1_un / len1;
+    GfVec3f n2 = n2_un / len2;
+
+    GfVec3f edge = x1 - x0;
+    float edgeLength = edge.GetLength();
+    if (edgeLength < 1e-6f) return;
+
+    float dot = std::clamp(GfDot(n1, n2), -1.0f, 1.0f);
+    float angle = std::acos(dot);
+    float sign = GfDot(edge, GfCross(n1, n2)) > 0.0f ? 1.0f : -1.0f;
+    float C = sign * angle - _rest[elem];
+
+    // Compute gradients
+    q0 = (GfDot(edge, n1) / len1) * GfCross(x2 - x1, n1);
+    q1 = (GfDot(edge, n1) / len1) * GfCross(n1, x2 - x0);
+    q2 = (GfDot(edge, n1) / len1) * GfCross(x0 - x1, n1);
+    q3 = (GfDot(edge, n2) / len2) * GfCross(x1 - x0, n2);
+
+    q0 /= len1 * edgeLength;
+    q1 /= len1 * edgeLength;
+    q2 /= len1 * edgeLength;
+    q3 /= len2 * edgeLength;
+
+    grad0 = q0;
+    grad1 = q1 + q3;
+    grad2 = q2;
+    grad3 = -q3;
+
+    float wSum =
+        w0 * grad0.GetLengthSq() +
+        w1 * grad1.GetLengthSq() +
+        w2 * grad2.GetLengthSq() +
+        w3 * grad3.GetLengthSq();
+
+    if (wSum < 1e-6f) return;
+
+    float alpha = _compliance / (dt * dt);
+    float dlambda = (-C - alpha * lambda) / (wSum + alpha);
+    lambda += dlambda;
+
+    /*
+    n1 = GfCross(x1, x2).GetNormalized();
+    n2 = GfCross(x1, x3).GetNormalized();
+
+    dot = GfClamp(GfDot(n1, n2), -1.f, 1.f);
+
+    sign = GfDot(x1, GfCross(n1, n2)) > 0.0f ? 1.0f : -1.0f;
+
+    angle = std::acos(dot) * sign;	
     if (angle < 1e-6 || std::isnan(dot)) continue;
 
     q2 =  (x1 ^ n2 + n1 ^ x1 * dot) / ((x1 ^ x2).GetLength() + 1e-6f);
@@ -834,12 +887,13 @@ void DihedralConstraint::SolvePosition(Particles* particles, float dt)
 
     float denom = alpha + (w0 * GfDot(q0, q0) + w1 * GfDot(q1, q1) + w2 * GfDot(q2, q2) + w3 * GfDot(q3, q3));
 	  if (denom < 1e-6f) continue;
-		lambda = -GfSqrt(1.0f - dot * dot) * (angle - _rest[elem]) / denom;
+		lambda = GfSqrt(1.0f - dot * dot) * (angle - _rest[elem]) / denom;
+    */
 
-    _correction[elem * ELEM_SIZE + 0] += w0 * lambda * q0;
-    _correction[elem * ELEM_SIZE + 1] += w1 * lambda * q1;
-    _correction[elem * ELEM_SIZE + 2] += w2 * lambda * q2;
-    _correction[elem * ELEM_SIZE + 3] += w3 * lambda * q3;
+    _correction[elem * ELEM_SIZE + 0] += w0 * lambda * grad0;
+    _correction[elem * ELEM_SIZE + 1] += w1 * lambda * grad1;
+    _correction[elem * ELEM_SIZE + 2] += w2 * lambda * grad2;
+    _correction[elem * ELEM_SIZE + 3] += w3 * lambda * grad3;
   }
 }
 
@@ -1057,9 +1111,11 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
     if(numContactUsed) {
       float rN = 1.f / (float)numContactUsed;
       _correction[elem] = accum * rN;
-            
-		  GfVec3f friction = _ComputeFriction(body->GetSelfCollisionFriction(), _correction[elem], velocity * rN);
+        /*
+		  GfVec3f friction = _ComputeFriction(body->GetSelfCollisionFriction(), _correction[elem], 
+        particles->velocity[index] - velocity * rN);
       _correction[elem]  += w0 / w * friction;
+      */
     }
   }
 }

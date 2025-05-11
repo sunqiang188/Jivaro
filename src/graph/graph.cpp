@@ -48,15 +48,11 @@ Graph::Node::Node(UsdPrim& prim)
       for(auto& propName: primDef.GetPropertyNames()) {
         UsdProperty prop = _prim.GetProperty(propName);
         if (prop.Is<UsdAttribute>()) {
-          std::cout << prop.GetName() << " is an Attribute" << std::endl;
           UsdAttribute attribute = _prim.GetAttribute(propName);
           Graph::Node::AddAttribute(attribute, propName, Graph::Port::OUTPUT|Graph::Port::HORIZONTAL);
         } else if (prop.Is<UsdRelationship>()) {
-          std::cout << prop.GetName() << " is a Relationship" << std::endl;
           UsdRelationship relationship = _prim.GetRelationship(propName);
           Graph::Node::AddRelationship(relationship, propName, Graph::Port::INPUT|Graph::Port::HORIZONTAL);
-        } else {
-          std::cout << prop.GetName() << " is an unknown Property type" << std::endl;
         }
         
       }

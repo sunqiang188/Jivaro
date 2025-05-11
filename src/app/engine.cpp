@@ -70,6 +70,7 @@ Engine::Engine(HdSceneIndexBaseRefPtr sceneIndex, TfToken plugin)
   _height = 512;
   _params.drawMode = Engine::DRAW_SHADED_SMOOTH;
   _params.complexity = 1.0f;
+  _params.gammaCorrectColors = true;
 
   _Initialize();
 }
@@ -112,8 +113,8 @@ void Engine::_Initialize()
   // init render paramss
   HdxRenderTaskParams params;
   params.viewport = GfVec4f(0, 0, _width, _height);
-  params.enableLighting = true;
-  params.enableSceneLights = true;
+  params.enableLighting = _params.enableLighting;
+  params.enableSceneLights = _params.enableSceneLights;
 
   _taskController->SetRenderParams(params);
 
@@ -324,9 +325,11 @@ Engine::Prepare()
 void
 Engine::Render()
 {
+
   _params.enableLighting = RANDOM_0_1 > 0.5;
   _params.enableSceneLights = RANDOM_0_1 > 0.5;
   _params.cullStyle = (HdCullStyle)RANDOM_0_X(6);
+
 
   _UpdateHydraCollection(&_collection, { SdfPath::AbsoluteRootPath() }, _params);
   _taskController->SetCollection(_collection);
@@ -335,6 +338,7 @@ Engine::Render()
   HdxRenderTaskParams params;
   params.enableLighting = true;
   params.enableSceneLights = true;
+
   //params.cullStyle = _params.cullStyle;
 
   _taskController->SetRenderParams(params);
