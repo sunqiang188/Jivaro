@@ -41,19 +41,13 @@ OpenSceneCommand::OpenSceneCommand(const std::string& filename)
   Application* app = Application::Get();
   if (strlen(filename.c_str()) > 0) {
     Model* model = app->GetModel();
-    std::cout << " load usd stage..." << std::endl;
     model->LoadUsdStage(filename);
-    std::cout << " update scene index..." << std::endl;
     app->GetIndex()->SetStage(model->GetStage());
   }
-  std::cout << " new scene loaded..." << std::endl;
   UndoInverse inverse;
   UndoRouter::Get().TransferEdits(&inverse);
   NewSceneNotice().Send();
-  std::cout << "new scene notice send" << std::endl;
   SceneChangedNotice().Send();
-  std::cout << "scene changed notice send" << std::endl;
-
 }
 
 //==================================================================================
