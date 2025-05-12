@@ -862,9 +862,9 @@ void SelfCollision::_UpdateParameters(const UsdPrim& prim, double time)
   UsdPbdCollisionAPI api(prim);
 
   _enabled = true;
-  _restitution = 0.0f;
-  _friction = 0.0f;
-  _damp = 0.0f;
+  _restitution = 0.1f;
+  _friction = 0.5f;
+  _damp = 0.5f;
   _margin = 0.001f;
   _maxSeparationVelocity = 0.f;
   _stiffness = 0.f;
