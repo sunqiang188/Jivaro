@@ -112,13 +112,13 @@ void Collision::FindContacts(Particles* particles, const std::vector<Body*>& bod
 
 void Collision::_FindContacts(Particles* particles, size_t begin, size_t end, float ft)
 {
+  _t = 0.f;
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     Contact* contact = _contacts.Get(index);
     if(!contact->IsTouching()) 
       _FindContact(particles, index, ft);
 
-    _t = 0.f;
     contact->Init(this, particles, index);
   }
 }
@@ -133,9 +133,12 @@ void Collision::_BuildContactConstraints(Particles* particles, const std::vector
   VtArray<int> elements;
   Body* currentBody = nullptr;
 
+  _t = 0.f;
+
   Mask::Iterator iterator(this, 0, numParticles);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     if (_contacts.IsActive(index)) {
+
       if (particles->body[index] != currentBody || elements.size() >= Constraint::BlockSize) {
       if (elements.size()) {
         constraint = new CollisionConstraint(currentBody, this, elements, _stiffness, _damp);
@@ -667,7 +670,7 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
 
     const GfVec3f delta = predicted - position;
     contact->SetActive(GfDot(delta, normal) < 0.f || delta.GetLength() < maxDistance);
-  }
+  } else contact->SetActive(false);
 }
 
 float 
@@ -675,6 +678,7 @@ MeshCollision::GetValue(Particles* particles, size_t index)
 {
   Contact* contact = _contacts.Get(index);
   if(!contact->IsValid())return 0.f;
+
   Mesh* mesh = (Mesh*)GetGeometry();
   const GfVec3f* positions = mesh->GetPositionsCPtr();
   const GfVec3f* previous = mesh->GetPreviousCPtr();
@@ -698,7 +702,8 @@ GfVec3f
 MeshCollision::GetGradient(Particles* particles, size_t index)
 {
   Contact* contact = _contacts.Get(index);
-  if(!contact->IsValid())return GfVec3f(0.f);
+  if(!contact->IsValid()) return GfVec3f(0.f);
+
   Mesh* mesh = (Mesh*)GetGeometry();
   const GfVec3f* positions = mesh->GetPositionsCPtr();
   const GfVec3f* previous = mesh->GetPreviousCPtr();
@@ -714,7 +719,8 @@ GfVec3f
 MeshCollision::GetVelocity(Particles* particles, size_t index)
 {
   Contact* contact = _contacts.Get(index);
-  if(!contact->IsValid())return GfVec3f(0.f);
+  if(!contact->IsValid()) return GfVec3f(0.f);
+
   Mesh* mesh = (Mesh*)GetGeometry();
 
   const GfVec3f* positions = mesh->GetPositionsCPtr();
@@ -924,6 +930,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
   _grid.Closests(index, &particles->predicted[0], /*&particles->velocity[0], ft,*/
     closests,  2.f * ( particles->radius[index] * radiusMultiplier + TOLERANCE_MARGIN));
   
+  _t = 0.f;
   for(int closest: closests) {
     if(numCollide >= PARTICLE_MAX_CONTACTS)break;
 
@@ -939,7 +946,7 @@ void SelfCollision::_FindContact(Particles* particles, size_t index, float ft)
       contact->SetComponentIndex(closest);
       contact->SetActive(true);
 
-      _t = 0.f;
+      
       contact->Init(this, particles, index);
       
       numCollide++;

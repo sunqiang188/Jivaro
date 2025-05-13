@@ -172,7 +172,6 @@ public:
 
   void Reset(Particles* particles) override;
   void SolvePosition(Particles* particles, float dt) override;
-  void SolveVelocity(Particles* particles, float dt) override;
 
   static size_t                 ELEM_SIZE;
 

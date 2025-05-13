@@ -320,7 +320,7 @@ void StretchConstraint::SolvePosition(Particles* particles, float dt)
 
   const float alpha =  _compliance / (dt * dt);
   size_t a, b;
-  float w0, w1, W, C, length;
+  float w0, w1, W, C, length, damping;
   GfVec3f gradient, normal, correction, damp;
 
   const GfVec3f* predicted = &particles->predicted[0];
@@ -334,7 +334,7 @@ void StretchConstraint::SolvePosition(Particles* particles, float dt)
     w0 = invMass[a];
     w1 = invMass[b];
 
-    W = w0 + w1 + alpha;
+    W = w0 + w1;
     if(W < 1e-6f) continue;
 
     gradient = predicted[a] - predicted[b];
@@ -345,45 +345,12 @@ void StretchConstraint::SolvePosition(Particles* particles, float dt)
 
     C = length - _rest[elem];
 
-    float lambda = -C / W;
+    float damping = _damp * GfDot((velocity[b] - velocity[a]), normal);
+
+    float lambda = -(C + dt * damping) / (W + alpha);
 
     _correction[elem * ELEM_SIZE + 0] += w0 * lambda * normal;
     _correction[elem * ELEM_SIZE + 1] -= w1 * lambda * normal;
-  }
-}
-
-void StretchConstraint::SolveVelocity(Particles* particles, float dt)
-{
-  _ResetCorrection();
-
-  const size_t numElements = _elements.size() / ELEM_SIZE;
-
-  const float alpha =  _compliance / (dt * dt);
-  size_t a, b;
-  float w0, w1, W, C, length;
-  GfVec3f relVel, normal, relVelAlongNrm, damp;
-
-  const GfVec3f* predicted = &particles->predicted[0];
-  const GfVec3f* velocity = &particles->velocity[0];
-  const float* invMass = &particles->invMass[0];
-  
-  for(size_t elem = 0; elem  < numElements; ++elem) {
-    a = _elements[elem * ELEM_SIZE + 0];
-    b = _elements[elem * ELEM_SIZE + 1];
-
-    w0 = invMass[a];
-    w1 = invMass[b];
-
-    W = w0 + w1 + alpha;
-    if(W < 1e-6f) continue;
-
-    relVel = particles->velocity[b] - particles->velocity[a] ;
-    normal = (particles->predicted[b] - particles->predicted[a]).GetNormalized();
-    relVelAlongNrm = GfDot(relVel, normal) * normal;
-    damp = _damp * relVelAlongNrm;
-
-    _correction[elem * ELEM_SIZE + 0] += w0 * damp;
-    _correction[elem * ELEM_SIZE + 1] -= w1 * damp;
   }
 }
 
@@ -919,6 +886,7 @@ void DihedralConstraint::SolvePosition(Particles* particles, float dt)
   }
 }
 
+
 size_t DihedralConstraint::GetPoints(Particles* particles, VtArray<GfVec3f>& positions, 
   VtArray<float>& radius, VtArray<GfVec3f>& colors)
 {
@@ -1033,20 +1001,20 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     const size_t index = _elements[elem];
     if(!_collision->IsContactActive(index)) continue;
 
-    float d = _collision->GetContactDepth(index) /*+ 
-      GfMax(_collision->GetContactInitDepth(index) - _collision->GetMaxSeparationVelocity() * dt, 0.f)*/;
+    float d = _collision->GetContactDepth(index) + 
+      GfMax(_collision->GetContactInitDepth(index) - _collision->GetMaxSeparationVelocity() * dt, 0.f);
 
-    _collision->SetContactTouching(index, d <= _collision->GetMargin()); 
+    _collision->SetContactTouching(index, d <= 0.f); 
     
-    if(particles->mass[index] < 1e-9 || d > 0.f) continue;
+    if(particles->mass[index] < 1e-9 || d > _collision->GetMargin()) continue;
 
     const GfVec3f normal = _collision->GetContactNormal(index);
-
     particles->color[index] = GfVec3f(0.75, 0.75, 0.5);
     
     
     float lambdaN = -d / (particles->invMass[index] + alpha);
-    _correction[elem] += lambdaN * normal * particles->invMass[index];
+    
+    _correction[elem] += -d *lambdaN * normal * particles->invMass[index];
     
     GfVec3f deltaP = particles->velocity[index] - _collision->GetContactVelocity(index);
     GfVec3f deltaPt = deltaP - GfDot(deltaP, normal) * normal;
@@ -1060,6 +1028,7 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
 
 void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 {
+  return;
   _ResetCorrection(); 
   const size_t numElements = _elements.size();
 

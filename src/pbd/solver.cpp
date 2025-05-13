@@ -602,7 +602,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
   //const size_t numThreads = WorkGetConcurrencyLimit();
   //const size_t packetSize = numParticles / (numThreads > 1 ? numThreads - 1 : 1);
   const float stepTime = 1.f / static_cast<float>(_subSteps - 1);
-
+  
   UpdateInputs(stage, time);
   UpdateParameters(stage, time);
   UpdateCollisions(stage, time);
@@ -638,7 +638,6 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
         std::placeholders::_1, std::placeholders::_2), Particles::PACKET_SIZE);
     //_timer->Stop();
 
-    _SolveVelocities(_constraints);
     _SolveVelocities(_contacts);
 
   }
