@@ -359,8 +359,8 @@ GfVec3f PlaneCollision::GetGradient(Particles* particles, size_t index)
 
 void PlaneCollision::Update(const UsdPrim& prim, double time) 
 {
-  _UpdatePositionAndNormal();
   _UpdateParameters(prim, time);
+  _UpdatePositionAndNormal();
 }
 
 void PlaneCollision::_UpdatePositionAndNormal()
@@ -399,8 +399,8 @@ BoxCollision::BoxCollision(Geometry* collider, const SdfPath& path,
 
 void BoxCollision::Update(const UsdPrim& prim, double time)
 {
-  _UpdateSize();
   _UpdateParameters(prim, time);
+  _UpdateSize();
 }
 
 void BoxCollision::_UpdateSize()
@@ -479,8 +479,8 @@ SphereCollision::SphereCollision(Geometry* collider, const SdfPath& path,
 
 void SphereCollision::Update(const UsdPrim& prim, double time)
 {
-  _UpdateCenterAndRadius();
   _UpdateParameters(prim, time);
+  _UpdateCenterAndRadius();
 }
 
 void SphereCollision::_UpdateCenterAndRadius()
@@ -529,8 +529,8 @@ CapsuleCollision::CapsuleCollision(Geometry* collider, const SdfPath& path,
 
 void CapsuleCollision::Update(const UsdPrim& prim, double time)
 {
-  _UpdateRadiusAndHeight();
   _UpdateParameters(prim, time);
+  _UpdateRadiusAndHeight();
 }
 
 void CapsuleCollision::_UpdateRadiusAndHeight()
@@ -607,7 +607,10 @@ MeshCollision::MeshCollision(Geometry* collider, const SdfPath& path,
   float restitution, float friction)
   : Collision(collider, path, restitution, friction)
 {
+  std::cout << "mesh collision constructor : " << path << std::endl;
+  std::cout << "create acceleration structure..." << std::endl;
   _CreateAccelerationStructure();
+  std::cout << "acceleration structure created..." << std::endl;
 }
 
 MeshCollision::~MeshCollision()
@@ -620,12 +623,11 @@ void MeshCollision::Init(Particles* particles, const std::vector<Body*>& bodies,
   _matrix = _collider->GetMatrix();
 
   size_t numParticles = particles->GetNumParticles();
-  std::cout << "Mesh Collision INITIALIZE : " << numParticles << std::endl;
 
   _contacts.Resize(numParticles, 1);
   _contacts.ResetAllUsed();
 
-  _BuildContactConstraints(particles, bodies, constraints);
+  //_BuildContactConstraints(particles, bodies, constraints);
   std::cout << "created  : " << constraints.size() << " constraints " << std::endl;
 }
 
@@ -637,6 +639,7 @@ void MeshCollision::Update(const UsdPrim& prim, double time)
 
 void MeshCollision::_CreateAccelerationStructure()
 {
+  std::cout << "init bvh " << _collider << std::endl;
   _bvh.Init({_collider});
 } 
 
@@ -883,7 +886,6 @@ void SelfCollision::Update(const UsdPrim& prim, double time)
 {
   _UpdateParameters(prim, time);
   _UpdateAccelerationStructure();
-
 }
 
 // 

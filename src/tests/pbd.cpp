@@ -176,12 +176,12 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
 
       switch(_colliders[c]->GetType()) {
         case Geometry::CUBE:
-          std::cout << " - created cube collision " << _clothesId[c] << std::endl;
+          std::cout << " - created cube collision " << _collidersId[c] << std::endl;
           collision = new BoxCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
         case Geometry::SPHERE:
-          std::cout << " - created sphere collision " << _clothesId[c] << std::endl;
+          std::cout << " - created sphere collision " << _collidersId[c] << std::endl;
           collision = new SphereCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
@@ -190,7 +190,7 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
           break;
 
         case Geometry::CAPSULE:
-          std::cout << " - created capsule collision " << _clothesId[c] << std::endl;
+          std::cout << " - created capsule collision " << _collidersId[c] << std::endl;
           collision = new CapsuleCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
 
@@ -199,7 +199,7 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
           break;
 
         case Geometry::MESH:
-          std::cout << " - created mesh collision " << _clothesId[c] << std::endl;
+          std::cout << " - created mesh collision " << _collidersId[c] << std::endl;
           collision = new MeshCollision(_colliders[c], _collidersId[c], restitution, friction);
           break;
       }
@@ -220,6 +220,7 @@ void TestPBD::InitExec(UsdStageRefPtr& stage)
     _scene.AddGeometry(_groundId, _ground);
 
     Collision* collision = new PlaneCollision(_ground, _groundId, 0.5f, 0.5f);
+    std::cout << " - created ground collision " << _groundId << std::endl;
     _solver->AddElement(collision, _ground, _groundId);
   }
   

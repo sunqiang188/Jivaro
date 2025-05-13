@@ -297,8 +297,9 @@ BVH::GetGeometryIndexFromCell(const BVH::Cell* cell) const
 void
 BVH::Init(const std::vector<Geometry*>& geometries)
 {
+  std::cout << "bvh init..." << std::endl;
   Intersector::_Init(geometries);
-  
+  std::cout << "bvh base class initialized" << std::endl;
   const GfBBox3d bbox;
   GfRange3d accum = bbox.GetRange();
   _numComponents = 0;
@@ -311,11 +312,13 @@ BVH::Init(const std::vector<Geometry*>& geometries)
   SetMin(accum.GetMin());
   SetMax(accum.GetMax());
 
+  std::cout << "bvh bbox : " << GetMin() << "," << GetMax() << std::endl;
+
   if(!_accelerated)return;
 
   _mortons.clear();
   _mortons.reserve(_numComponents);
-  
+  std::cout << "bvh collect geometries..." << std::endl;
   // first load all geometries
   for (size_t g = 0; g < GetNumGeometries(); ++g) {
     size_t start = _cells.size();
@@ -342,6 +345,7 @@ BVH::Init(const std::vector<Geometry*>& geometries)
     SetGeometryCellIndices(g, start, _cells.size());
   }
 
+  std::cout << "bvh sort cells" << std::endl;
   size_t numLeaves = _cells.size();
   Morton morton = SortCells();
   size_t numBranches = _cells.size() - numLeaves;

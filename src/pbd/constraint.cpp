@@ -334,7 +334,7 @@ void StretchConstraint::SolvePosition(Particles* particles, float dt)
     w0 = invMass[a];
     w1 = invMass[b];
 
-    W = w0 + w1;
+    W = w0 + w1 + alpha;
     if(W < 1e-6f) continue;
 
     gradient = predicted[a] - predicted[b];
@@ -345,22 +345,45 @@ void StretchConstraint::SolvePosition(Particles* particles, float dt)
 
     C = length - _rest[elem];
 
-
-    // Relative velocity projected along constraint
-    GfVec3f relVel = velocity[b] - velocity[a];
-    float relVelN = GfDot(relVel, normal);
-
-    // Effective stiffness (approximate spring constant)
-    float K_eff = (_compliance > 0.f) ? 1.0f / _compliance : 1e5f;
-
-    // Rayleigh damping force magnitude (projected)
-    float dampingTerm = _damp * relVelN + _damp * K_eff * C;
-
-    // Embed damping into constraint correction
-    float lambda = -(C + dt * dampingTerm) / (W + alpha);
+    float lambda = -C / W;
 
     _correction[elem * ELEM_SIZE + 0] += w0 * lambda * normal;
     _correction[elem * ELEM_SIZE + 1] -= w1 * lambda * normal;
+  }
+}
+
+void StretchConstraint::SolveVelocity(Particles* particles, float dt)
+{
+  _ResetCorrection();
+
+  const size_t numElements = _elements.size() / ELEM_SIZE;
+
+  const float alpha =  _compliance / (dt * dt);
+  size_t a, b;
+  float w0, w1, W, C, length;
+  GfVec3f relVel, normal, relVelAlongNrm, damp;
+
+  const GfVec3f* predicted = &particles->predicted[0];
+  const GfVec3f* velocity = &particles->velocity[0];
+  const float* invMass = &particles->invMass[0];
+  
+  for(size_t elem = 0; elem  < numElements; ++elem) {
+    a = _elements[elem * ELEM_SIZE + 0];
+    b = _elements[elem * ELEM_SIZE + 1];
+
+    w0 = invMass[a];
+    w1 = invMass[b];
+
+    W = w0 + w1 + alpha;
+    if(W < 1e-6f) continue;
+
+    relVel = particles->velocity[b] - particles->velocity[a] ;
+    normal = (particles->predicted[b] - particles->predicted[a]).GetNormalized();
+    relVelAlongNrm = GfDot(relVel, normal) * normal;
+    damp = _damp * relVelAlongNrm;
+
+    _correction[elem * ELEM_SIZE + 0] += w0 * damp;
+    _correction[elem * ELEM_SIZE + 1] -= w1 * damp;
   }
 }
 
@@ -769,6 +792,37 @@ static float _GetCotangentTheta(const GfVec3f& a, const GfVec3f& b)
   return cosTheta / sinTheta;
 };
 
+static float _ComputeSignedDihedral(
+    const GfVec3f& p0,  // shared vertex 1
+    const GfVec3f& p1,  // shared vertex 2 (forms edge p0-p1)
+    const GfVec3f& p2,  // triangle 1 point
+    const GfVec3f& p3   // triangle 2 point
+) {
+    const float eps = 1e-6f;
+
+    GfVec3f e = p1 - p0;  // shared edge
+    float eLen = e.GetLength();
+    if (eLen < eps) return 0.0f;
+    GfVec3f edgeDir = e / eLen;
+
+    // Triangle normals (unnormalized)
+    GfVec3f n1 = GfCross(p2 - p0, e);  // triangle p0-p1-p2
+    GfVec3f n2 = GfCross(e, p3 - p0);  // triangle p0-p1-p3
+
+    float l1 = n1.GetLength();
+    float l2 = n2.GetLength();
+    if (l1 < eps || l2 < eps) return 0.0f;
+
+    n1 /= l1;
+    n2 /= l2;
+
+    float cosTheta = GfClamp(GfDot(n1, n2), -1.0f, 1.0f);
+    float sinTheta = GfDot(edgeDir, GfCross(n1, n2));
+
+    return std::atan2(sinTheta, cosTheta);  // signed dihedral angle in radians
+}
+
+
 DihedralConstraint::DihedralConstraint(Body* body, const VtArray<int>& elems,
   float stiffness, float damping)
   : Constraint(ELEM_SIZE, stiffness, damping, elems)
@@ -790,56 +844,20 @@ DihedralConstraint::DihedralConstraint(Body* body, const VtArray<int>& elems,
     const GfVec3f p2(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset]));
     const GfVec3f p3(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 3] - offset]));
 
-    GfVec3f eM = p1 - p0;
-    GfVec3f eL = p2 - p0;
-    GfVec3f eR = p3 - p0;
-
-    GfVec3f nL = GfCross(eM, eL);
-    GfVec3f nR = GfCross(eM , eR);
-
-    double lL = nL.GetLength();
-    double lR = nR.GetLength();
-
-    if(lL < 0.0000001f || lR < 0.0000001f)
-      continue;
-
-    nL /= lL;
-    nR /= lR;
-
-    double cosPhi = GfClamp(GfDot(nL, nR), -1.f, 1.f);
-    _rest[elemIdx] = std::acosf(cosPhi);
+    _rest[elemIdx] = _ComputeSignedDihedral(p0, p1, p2, p3);
 
   }
-}
-
-static float _GetAngleBetweenTriangles(const GfVec3f& nL, const GfVec3f& nR,
-  const GfVec3f& eM, float* arcCosSign=0)
-{
-  float result;
-  float cosAngle = GfDot(nL, nR);
-  if(GfDot(GfCross(nL, nR), eM) < 0.f) {
-    result = 2.f * M_PI - std::acosf(cosAngle);
-    if(arcCosSign)
-      *arcCosSign = -1.f;
-  } else {
-    result = std::acos(cosAngle);
-    if(arcCosSign)*arcCosSign = 1.f;
-  }
-  return result;
 }
 
 void DihedralConstraint::SolvePosition(Particles* particles, float dt)
 {
   const float eps = 1e-6f;
-
   _ResetCorrection();
 
   size_t numElements = _elements.size() / ELEM_SIZE;
+  float alpha = _compliance / (dt * dt);
 
-  float alpha = _compliance / dt / dt;
-  
-  for(size_t elem = 0; elem  < numElements; ++elem) {
-
+  for (size_t elem = 0; elem < numElements; ++elem) {
     size_t a = _elements[elem * ELEM_SIZE + 0];
     size_t b = _elements[elem * ELEM_SIZE + 1];
     size_t c = _elements[elem * ELEM_SIZE + 2];
@@ -860,43 +878,44 @@ void DihedralConstraint::SolvePosition(Particles* particles, float dt)
     GfVec3f eR = p3 - p0;
 
     GfVec3f nL = GfCross(eM, eL);
-    GfVec3f nR = GfCross(eM , eR);
+    GfVec3f nR = GfCross(eM, eR);
 
     double lL = nL.GetLength();
     double lR = nR.GetLength();
-
-    if(lL < 0.0000001f || lR < 0.0000001f) continue;
+    if (lL < eps || lR < eps) continue;
 
     nL /= lL;
     nR /= lR;
 
-    double cosPhi = GfClamp(GfDot(nL, nR), -1.f, 1.f);
-    double phi = std::acosf(cosPhi);
+    GfVec3f e = eM.GetNormalized();  // shared edge direction
+
+    double cosPhi = GfClamp(GfDot(nL, nR), -1.0f, 1.0f);
+    double phi = _ComputeSignedDihedral(p0, p1, p2, p3);  // signed dihedral angle
 
     double C = phi - _rest[elem];
-    if(GfAbs(C) < 0.0000001f) continue;
+    if (std::abs(C) < eps) continue;
 
-    double radixAndDenom = 1.f - cosPhi * cosPhi;
-    double denom = -GfSqrt(radixAndDenom);
-    if(GfAbs(denom) < 0.0000001f) continue;
-
+    // Gradient terms (dihedral angle derivative approx.)
     GfVec3f q1 = (GfCross(eR, nL) + cosPhi * GfCross(nR, eR)) / lR +
-      (GfCross(eL, nR) + cosPhi * GfCross(nL, eL)) / lL;
+                  (GfCross(eL, nR) + cosPhi * GfCross(nL, eL)) / lL;
     GfVec3f q2 = (GfCross(nR, eM) + cosPhi * GfCross(nL, eM)) / lL;
     GfVec3f q3 = (GfCross(nL, eM) + cosPhi * GfCross(nR, eM)) / lR;
     GfVec3f q0 = -q1 - q2 - q3;
 
-    double W = 
-      w0 * GfDot(q0, q0) + w1 * GfDot(q1, q1) + 
-      w2 * GfDot(q2, q2) + w3 * GfDot(q3, q3) + alpha * GfSqr(denom);
-    if(GfAbs(W) < 0.0000001f) continue;
+    // Compute constraint stiffness weight
+    double W = w0 * GfDot(q0, q0) + w1 * GfDot(q1, q1) +
+                w2 * GfDot(q2, q2) + w3 * GfDot(q3, q3) + alpha;
 
-    double lambda = GfSqr(denom) * -C / W;
-     
-    _correction[elem * ELEM_SIZE + 0] += w0 * lambda * q0 * denom;
-    _correction[elem * ELEM_SIZE + 1] += w1 * lambda * q1 * denom;
-    _correction[elem * ELEM_SIZE + 2] += w2 * lambda * q2 * denom;
-    _correction[elem * ELEM_SIZE + 3] += w3 * lambda * q3 * denom;
+    if (std::abs(W) < eps) continue;
+
+    // XPBD solve for lambda (no extra denom)
+    double lambda = -C / W;
+
+    // Apply position corrections (no double-scaling)
+    _correction[elem * ELEM_SIZE + 0] += w0 * lambda * q0;
+    _correction[elem * ELEM_SIZE + 1] += w1 * lambda * q1;
+    _correction[elem * ELEM_SIZE + 2] += w2 * lambda * q2;
+    _correction[elem * ELEM_SIZE + 3] += w3 * lambda * q3;
   }
 }
 
@@ -971,7 +990,7 @@ void CollisionConstraint::ApplyPosition(Particles* particles)
   const GfVec2f* counter = &particles->counter[0];
   float invDt = 1.f / 24.f;
   for(const auto& elem: _elements) 
-    particles->predicted[elem] += _correction[corrIdx++];// / counter[elem][1];
+    particles->predicted[elem] += _correction[corrIdx++] / counter[elem][1];
 }
 
 // this one has to happen serialy
@@ -980,7 +999,7 @@ void CollisionConstraint::ApplyVelocity(Particles* particles)
   size_t corrIdx = 0;
   const GfVec2f* counter = &particles->counter[0];
   for (const auto& elem : _elements)
-    particles->velocity[elem] += _correction[corrIdx++];// / counter[elem][1];
+    particles->velocity[elem] += _correction[corrIdx++] / counter[elem][1];
 }
 
 GfVec3f CollisionConstraint::_ComputeFriction(const float friction, const GfVec3f& correction, 
@@ -1014,10 +1033,10 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     const size_t index = _elements[elem];
     if(!_collision->IsContactActive(index)) continue;
 
-    float d = _collision->GetContactDepth(index) + 
-    GfMax(_collision->GetContactInitDepth(index) - _collision->GetMaxSeparationVelocity() * dt, 0.f);
+    float d = _collision->GetContactDepth(index) /*+ 
+      GfMax(_collision->GetContactInitDepth(index) - _collision->GetMaxSeparationVelocity() * dt, 0.f)*/;
 
-    _collision->SetContactTouching(index, d <= 0.f); 
+    _collision->SetContactTouching(index, d <= _collision->GetMargin()); 
     
     if(particles->mass[index] < 1e-9 || d > 0.f) continue;
 
@@ -1029,15 +1048,13 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     float lambdaN = -d / (particles->invMass[index] + alpha);
     _correction[elem] += lambdaN * normal * particles->invMass[index];
     
-    /*
-    GfVec3f deltaP = ((particles->predicted[index] + _correction[elem]) - 
-      particles->previous[index]) - _collision->GetContactVelocity(index) * dt;
+    GfVec3f deltaP = particles->velocity[index] - _collision->GetContactVelocity(index);
     GfVec3f deltaPt = deltaP - GfDot(deltaP, normal) * normal;
     float lambdaT = deltaPt.GetLength() ;
 
     if(lambdaT  < _collision->GetFriction() * lambdaN)
       _correction[elem] -= deltaPt;
-    */
+
   }
 }
 
@@ -1051,13 +1068,13 @@ void CollisionConstraint::_SolveVelocityGeom(Particles* particles, float dt)
 
     if(!_collision->IsContactTouching(index)) continue;
 
-    GfVec3f vel = particles->velocity[index] / dt - _collision->GetContactVelocity(index);
+    GfVec3f velocity = particles->velocity[index] - _collision->GetContactVelocity(index);
 
     GfVec3f normal = _collision->GetContactNormal (index);
-    GfVec3f vT = particles->velocity[index] - GfDot(particles->velocity[index], normal) * normal;
+    GfVec3f vT = velocity - GfDot(velocity, normal) * normal;
 
-    _correction[elem] = -vT;/*GfMin(_collision->GetFriction() * GfAbs(_collision->GetContactDepth(index) / dt) * particles->invMass[index],
-      vT.GetLength()) * vT.GetNormalized()*/;
+    _correction[elem] = -vT*GfMin(_collision->GetFriction() * GfAbs(_collision->GetContactDepth(index) / dt) * particles->invMass[index],
+      vT.GetLength());
 
 
   }

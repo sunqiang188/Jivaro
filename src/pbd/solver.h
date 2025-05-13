@@ -74,6 +74,9 @@ public:
   void AddForce(Force* force) { _forces.push_back(force); };
   Force* GetForce(size_t idx) { return _forces[idx]; };
 
+  // contacts
+  std::vector<Constraint*>& GetContacts(){return _contacts;};
+  
   // constraints
   void AddConstraint(Constraint* constraint);
   Constraint* GetConstraint(size_t idx) { return _constraints[idx]; };

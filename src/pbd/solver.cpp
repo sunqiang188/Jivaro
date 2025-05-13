@@ -441,7 +441,7 @@ void Solver::_UpdateParticles(size_t begin, size_t end)
   short* state = &_particles.state[0];
 
   float invDt = 1.f / _stepTime, vL;
-  const float vMax = 25.f;
+  const float vMax = 12.f;
 
   const double velDecay = std::exp(std::log(0.95f) * _stepTime);
 
@@ -574,10 +574,8 @@ void Solver::Reset(UsdStageRefPtr& stage)
     delete contact;
   _contacts.clear();
 
-  /*
   for(Collision* collision: _collisions)
     collision->Init(&_particles, _bodies, _contacts);
-  */
 
   if(!_selfCollisions) {
     _selfCollisions = new SelfCollision(&_particles, 
@@ -640,6 +638,7 @@ void Solver::Step(UsdStageRefPtr& stage, float time)
         std::placeholders::_1, std::placeholders::_2), Particles::PACKET_SIZE);
     //_timer->Stop();
 
+    _SolveVelocities(_constraints);
     _SolveVelocities(_contacts);
 
   }
