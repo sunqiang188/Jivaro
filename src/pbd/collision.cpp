@@ -607,10 +607,7 @@ MeshCollision::MeshCollision(Geometry* collider, const SdfPath& path,
   float restitution, float friction)
   : Collision(collider, path, restitution, friction)
 {
-  std::cout << "mesh collision constructor : " << path << std::endl;
-  std::cout << "create acceleration structure..." << std::endl;
   _CreateAccelerationStructure();
-  std::cout << "acceleration structure created..." << std::endl;
 }
 
 MeshCollision::~MeshCollision()
@@ -626,9 +623,6 @@ void MeshCollision::Init(Particles* particles, const std::vector<Body*>& bodies,
 
   _contacts.Resize(numParticles, 1);
   _contacts.ResetAllUsed();
-
-  //_BuildContactConstraints(particles, bodies, constraints);
-  std::cout << "created  : " << constraints.size() << " constraints " << std::endl;
 }
 
 void MeshCollision::Update(const UsdPrim& prim, double time)
@@ -639,7 +633,6 @@ void MeshCollision::Update(const UsdPrim& prim, double time)
 
 void MeshCollision::_CreateAccelerationStructure()
 {
-  std::cout << "init bvh " << _collider << std::endl;
   _bvh.Init({_collider});
 } 
 
