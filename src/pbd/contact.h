@@ -20,7 +20,7 @@ public:
     ACTIVE,
     TOUCHING
   };
-  Contact() : _state(DISCARD), _normal(0.f,1.f, 0.f), _velocity(0.f), _initDepth(0.f), _depth(0.f){};
+  Contact() : _state(DISCARD){};
   virtual ~Contact(){};
 
   void Init(Collision* collision, Particles* particles, size_t index);

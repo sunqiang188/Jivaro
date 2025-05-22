@@ -49,7 +49,7 @@ usd_library(usdPbd
 add_custom_command(
     TARGET usdPbd
     PRE_BUILD
-    COMMAND python3 ${CMAKE_SOURCE_DIR}/plugins/usdGenSchema.py ${CMAKE_SOURCE_DIR}/plugins/usdPbd/schema.usda
+    COMMAND python ${CMAKE_SOURCE_DIR}/plugins/usdGenSchema.py ${CMAKE_SOURCE_DIR}/plugins/usdPbd/schema.usda
     COMMENT "Generate UsdPbd plugin sources"
 ) 
 
