@@ -155,84 +155,6 @@ void Collision::_BuildContactConstraints(Particles* particles, const std::vector
 
 }
 
-void 
-Collision::CreateContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
-    std::vector<Constraint*>& constraints)
-{
-  /*
-  Constraint* constraint = nullptr;
-  if(_contacts.GetTotalNumUsed()) {
-    if(GetTypeId() == Collision::MESH) {
-      const Mesh* mesh = (const Mesh*)_collider;
-      const GfVec3f* positions = mesh->GetPositionsCPtr();
-      const GfVec3f* normals = mesh->GetNormalsCPtr();
-
-      VtArray<int> elements;
-      VtArray<Contact*> contacts;
-
-      Mask::Iterator iterator(this, 0, particles->GetNumParticles());
-      size_t index = iterator.Begin();
-      for (; index != Mask::INVALID_INDEX; index = iterator.Next()) {
-        if(!_contacts.GetNumUsed(index)) continue;
-        
-        Contact* contact = _contacts.Use(index);
-        
-        if(contact->IsTouching()) {
-          //const GfVec3f velocity = mesh->GetTriangleVelocity(contact->GetComponentIndex());
-          //particles->position[p] = desired;
-          //particles->predicted[p] = desired;
-          contact->Update(this, particles, index);
-          elements.push_back(index);
-          contacts.push_back(contact);
-          particles->color[index] = GfVec3f(1.f, 0.f, 0.f);
-        }  
-        else
-          particles->color[index] = GfVec3f(0.5f, 0.5f, 0.5f);
-
-        if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
-          if (elements.size()) {
-            constraint = new ContactConstraint(particles->body[index], elements, this, contacts, _stiffness, _damp);
-            constraints.push_back(constraint);
-            elements.clear();
-            contacts.clear();
-          } 
-        }
-      }
-    }
-    // TODO implement other collision types
-    
-  }
-
-
-  
-  CollisionConstraint* constraint = NULL;
-  size_t numParticles = particles->GetNumParticles();
-
-  size_t numContacts = _contacts.GetTotalNumUsed();
-
-  VtArray<int> elements;
- 
-  size_t contactsOffset = 0;
-  size_t contactIdx = 0;
-  Mask::Iterator iterator(this, 0, numParticles);
-  size_t index = iterator.Begin();
-  for (; index != Mask::INVALID_INDEX; index = iterator.Next()) {
-    size_t numUsed = _contacts.GetNumUsed(index);
-    if(numUsed) {
-      elements.push_back(index);      
-    } 
-    
-    if ((elements.size() >= Constraint::BlockSize) || iterator.End()) {
-      if (elements.size()) {
-        constraint = new CollisionConstraint(particles, this, elements);
-        constraints.push_back(constraint);
-        elements.clear();
-      } 
-    }
-  }
-  */
-}
-
 
 // 
 // Init
@@ -313,6 +235,7 @@ bool Collision::IsContactTouching(size_t index, size_t c) const
 
 void Collision::SetContactActive(size_t index, bool active, size_t c)
 {
+  _contacts.Use(index);
   _contacts.Get(index, c)->SetActive(active);
 }
 
@@ -382,7 +305,10 @@ void PlaneCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const GfVec3f predicted(particles->predicted[index] + particles->velocity[index] * ft);
   float d = GfDot(_normal, predicted - _position)  - particles->radius[index];
-  _contacts.Get(index)->SetActive(d < _margin);
+  if(d < _margin) {
+    _contacts.Use(index);
+    _contacts.Get(index)->SetActive(true);
+  }
 }
 
 //----------------------------------------------------------------------------------------
@@ -442,8 +368,10 @@ void BoxCollision::_FindContact(Particles* particles, size_t index, float ft)
   const GfVec3d scale = _collider->GetScale();
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
 
-  _contacts.Get(index)->SetActive(
-    cube->SignedDistance(predicted) - particles->radius[index] / scaleFactor < Collision::TOLERANCE_MARGIN);
+  if(cube->SignedDistance(predicted) - particles->radius[index] / scaleFactor < Collision::TOLERANCE_MARGIN) {
+    _contacts.Use(index);
+    _contacts.Get(index)->SetActive(true);
+  }
 }
 
 float BoxCollision::GetValue(Particles* particles, size_t index)
@@ -495,7 +423,10 @@ void SphereCollision::_FindContact(Particles* particles, size_t index, float ft)
 {
   const GfVec3f velocity = particles->velocity[index] * ft;
   GfVec3f predicted(_collider->GetInverseMatrix().Transform(particles->predicted[index] + velocity));
-  _contacts.Get(index)->SetActive(predicted.GetLength() - particles->radius[index] < _radius);
+  if(predicted.GetLength() - particles->radius[index] < _radius) {
+    _contacts.Use(index);
+    _contacts.Get(index)->SetActive(true);
+  }
 }
 
 float SphereCollision::GetValue(Particles* particles, size_t index)
@@ -569,7 +500,10 @@ void CapsuleCollision::_FindContact(Particles* particles, size_t index, float ft
   const float scaleFactor = (scale[0] + scale[1] + scale[2]) / 3.f + 1e-9;
   const float d = capsule->SignedDistance(predicted) - (particles->radius[index] + _margin) / scaleFactor;
 
-  _contacts.Get(index)->SetActive(d < Collision::TOLERANCE_MARGIN);
+  if(d < Collision::TOLERANCE_MARGIN) {
+    _contacts.Use(index);
+    _contacts.Get(index)->SetActive(true);
+  }
 }
 
 float CapsuleCollision::GetValue(Particles* particles, size_t index)
@@ -620,13 +554,11 @@ void MeshCollision::Init(Particles* particles, const std::vector<Body*>& bodies,
   _matrix = _collider->GetMatrix();
 
   size_t numParticles = particles->GetNumParticles();
-  std::cout << "Mesh Collision INITIALIZE : " << numParticles << std::endl;
 
   _contacts.Resize(numParticles, 1);
   _contacts.ResetAllUsed();
 
   _BuildContactConstraints(particles, bodies, constraints);
-  std::cout << "created  : " << constraints.size() << " constraints " << std::endl;
 }
 
 void MeshCollision::Update(const UsdPrim& prim, double time)
@@ -651,7 +583,7 @@ void MeshCollision::_FindContact(Particles* particles, size_t index, float ft)
   const GfVec3f* positions = mesh->GetPositionsCPtr();
   const GfVec3f* normals = mesh->GetNormalsCPtr();
 
-  Contact* contact = _contacts.Get(index);
+  Contact* contact = _contacts.Use(index);
   *contact = Contact();
 
   const GfVec3f predicted = particles->predicted[index] + particles->velocity[index] * ft;

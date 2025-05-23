@@ -83,8 +83,6 @@ public:
   void GetConstraintsByType(short type, std::vector<Constraint*>& results);
   void UpdateConstraintsDisplay();
   void ClearConstraintsDisplay();
-  //void BuildIntersectionConstraints();
-  //void BuildContactConstraints();
 
   // collisions
   std::vector<Collision*> GetCollisions(){return _collisions;};
@@ -143,7 +141,7 @@ private:
   // system
   Particles                           _particles;
   std::vector<Constraint*>            _constraints;
-  std::vector<Constraint*>            _contacts;    
+  std::vector<Constraint*>            _contacts;   
   std::vector<Collision*>             _collisions;
   Collision*                          _selfCollisions;
   std::vector<Body*>                  _bodies;

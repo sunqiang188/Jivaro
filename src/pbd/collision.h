@@ -61,9 +61,6 @@ public:
     std::vector<Constraint*>& constraints, float ft);
   virtual void UpdateContacts(Particles* particles, float t);
 
-  virtual void CreateContactConstraints(Particles* particles, const std::vector<Body*>& bodies,
-    std::vector<Constraint*>& constraints);
-
   virtual Geometry* GetGeometry(){return _collider;};
 
   virtual size_t GetContactComponent(size_t index, size_t c=0) const;
