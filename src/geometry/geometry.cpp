@@ -73,7 +73,7 @@ Geometry::SetMatrix(const GfMatrix4d& matrix)
 { 
   _prevMatrix = _matrix;
   _matrix = matrix; 
-  _invMatrix = matrix.GetInverse();
+  _invMatrix = _matrix.GetInverse();
   _ComputeVelocity();
 };
 

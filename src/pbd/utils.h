@@ -37,29 +37,30 @@ void ExtractRotation(const GfMatrix3d &A, GfQuaternion &q,
 }
 */
 
-GfMatrix4d InterpolateMatrices(const GfMatrix4d& m0, const GfMatrix4d& m1, float t)
+GfMatrix4d InterpolateMatrices(const GfMatrix4d& m1, const GfMatrix4d& m2, float t)
 {
-  GfVec3f s0(
-    GfVec3f(m0[0][0], m0[1][0], m0[2][0]).GetLength(),
-    GfVec3f(m0[0][1], m0[1][1], m0[2][1]).GetLength(),
-    GfVec3f(m0[0][2], m0[1][2], m0[2][2]).GetLength());
+  GfTransform x1(m1);
+  GfTransform x2(m2);
 
-  GfVec3f s1(
-    GfVec3f(m1[0][0], m1[1][0], m1[2][0]).GetLength(),
-    GfVec3f(m1[0][1], m1[1][1], m1[2][1]).GetLength(),
-    GfVec3f(m1[0][2], m1[1][2], m1[2][2]).GetLength());
+  GfVec3d t1(x1.GetTranslation());
+  GfVec3d t2(x2.GetTranslation());
 
-  GfRotation rotation = GfRotation(GfSlerp(t, m0.ExtractRotationQuat(), m1.ExtractRotationQuat()));
+  GfVec3d s1(x1.GetScale());
+  GfVec3d s2(x2.GetScale());
 
-  const GfTransform interpolated(
-    GfSlerp(t, s0, s1),                                              // interpolated scale
-    GfRotation(),                                                    // pivot orientation
-    rotation,                                                        // interpolated rotation
-    GfVec3d(0.f),                                                    // pivot position
-    GfSlerp(t, m0.ExtractTranslation(), m1.ExtractTranslation())     // interpolated translation
-  );
-  
-  return interpolated.GetMatrix();
+  GfQuaternion r1(x1.GetRotation().GetQuaternion());
+  GfQuaternion r2(x2.GetRotation().GetQuaternion());
+
+  GfVec3d translation = (1.f - t) * t1 + t * t2;
+  GfVec3d scale = (1.f - t) * s1 + t * s2;
+  GfQuaternion rotation = pxr::GfSlerp(r1, r2, t);
+
+  GfTransform result;
+  result.SetTranslation(translation);
+  result.SetScale(scale);
+  result.SetRotation(rotation);
+
+  return result.GetMatrix();
 }
 
 JVR_NAMESPACE_CLOSE_SCOPE

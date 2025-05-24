@@ -620,12 +620,12 @@ MeshCollision::GetValue(Particles* particles, size_t index)
   const Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
 
   const GfVec3f position = 
-    //contact->ComputeInterpolatedPosition(positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
-    contact->ComputePosition(positions, &triangle->vertices[0], 3, &_matrix);
+    contact->ComputeInterpolatedPosition(positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
+    //contact->ComputePosition(positions, &triangle->vertices[0], 3, &_matrix);
 
   const GfVec3f normal = 
-    //contact->ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
-    contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_matrix);
+    contact->ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
+    //contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_matrix);
 
   return GfDot(particles->predicted[index] - position, normal)  - particles->radius[index];
 
@@ -642,8 +642,8 @@ MeshCollision::GetGradient(Particles* particles, size_t index)
   const GfVec3f* normals = mesh->GetNormalsCPtr();
   const Triangle* triangle = mesh->GetTriangle(contact->GetComponentIndex());
   
-  //return contact->ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
-  return contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_matrix);
+  return contact->ComputeInterpolatedNormal(normals, positions, previous, _t, &triangle->vertices[0], 3, &_matrix);
+  //return contact->ComputeNormal(normals, &triangle->vertices[0], 3, &_matrix);
 }
 
 

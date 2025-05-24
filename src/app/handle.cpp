@@ -230,7 +230,7 @@ bool _HasCommonXformOps(const UsdGeomXformable& xformable)
 
   UsdGeomXformOp s;
   if (it != xformOps.end() && it->GetName() == attrNames.scale && !it->IsInverseOp())
-    s = std::move(*it);
+    ++it;
 
   UsdGeomXformOp pInv;
   if (it != xformOps.end() && it->GetName() == attrNames.pivot && it->IsInverseOp())
