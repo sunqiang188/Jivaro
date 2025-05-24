@@ -507,7 +507,7 @@ Test_TfNotice()
 
 TF_REGISTRY_FUNCTION(TfType)
 {
-  std::cout << "FUCKIN REGISTRY FUCKIN FUNCTIONS !!!" << std::endl;
+  std::cout << "TF REGISTRY FUNCTIONS !!!" << std::endl;
   TfType::Define<TestNotice, TfType::Bases<TfNotice> >();
   TfType::Define<MainNotice, TfType::Bases<TfNotice> >();
   TfType::Define<WorkerNotice, TfType::Bases<TfNotice> >();
