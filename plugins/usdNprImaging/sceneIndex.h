@@ -6,14 +6,14 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+class UsdNprSceneIndex;
 TF_DECLARE_REF_PTRS(UsdNprSceneIndex);
 
 class UsdNprSceneIndex : public HdSingleInputFilteringSceneIndexBase 
 {
 public:
-    USDNPRIMAGING_API
     static UsdNprSceneIndexRefPtr New(
-      const HdSceneIndexBaseRefPtr  &inputSceneIndex){
+      const HdSceneIndexBaseRefPtr  inputSceneIndex){
         return TfCreateRefPtr(new UsdNprSceneIndex(inputSceneIndex));}
 
 public:

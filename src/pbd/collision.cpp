@@ -115,6 +115,7 @@ void Collision::_FindContacts(Particles* particles, size_t begin, size_t end, fl
   Mask::Iterator iterator(this, begin, end);
   for (size_t index = iterator.Begin(); index != Mask::INVALID_INDEX; index = iterator.Next()) {
     Contact* contact = _contacts.Get(index);
+    _t = 1.f;
     if(!contact->IsTouching()) 
       _FindContact(particles, index, ft);
 

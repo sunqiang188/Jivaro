@@ -4,9 +4,12 @@
 #include "pxr/imaging/hd/sceneIndexPluginRegistry.h"
 
 #include "api.h"
+#include "stroke.h"
+#include "mesh.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+class UsdPrim;
 
 class UsdNprSceneIndexPlugin : public HdSceneIndexPlugin {
 public:

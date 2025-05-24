@@ -34,5 +34,24 @@ usd_library(usdNpr
         schema.usda
 )
 
+add_custom_command(
+    TARGET usdNpr
+    PRE_BUILD
+    COMMAND python ${CMAKE_SOURCE_DIR}/plugins/usdGenSchema.py ${CMAKE_SOURCE_DIR}/plugins/usdNpr/schema.usda
+    COMMENT "Generate UsdNpr plugin sources"
+) 
+
+if(MSVC)
+    message("THIS IS MICROSOFT VISUAL STUDIO...")
+    message("${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/usdNpr.lib")
+    message("${CMAKE_CURRENT_BINARY_DIR}/usdNpr.lib")
+    add_custom_command(
+        TARGET usdNpr 
+        POST_BUILD 
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/usdNpr.lib" "${CMAKE_CURRENT_BINARY_DIR}/usdNpr.lib"
+        COMMENT "Copying ${copy_file_name} to build directory"
+)
+endif()
+
 
 

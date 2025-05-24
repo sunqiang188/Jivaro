@@ -7,7 +7,7 @@ The basic idea is to add an execution system inside a Hydra 2.0 Scene Index.
 
 ![UI preview of Jivaro 2](images/1C3Tsa1W.gif)
 
-![UI preview of Jivaro 3](images/09c9751i.gif)
+![UI preview of Jivaro 3](images/l2Jb9t32.gif)
 
 ![UI preview of Jivaro 4](images/frEI1ERm.gif)
 

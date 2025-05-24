@@ -30,3 +30,15 @@ usd_library(usdNprImaging
         plugInfo.json
 )
 
+if(MSVC)
+    message("THIS IS MICROSOFT VISUAL STUDIO...")
+    message("${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/usdNprImaging.lib")
+    message("${CMAKE_CURRENT_BINARY_DIR}/usdNprImaging.lib")
+    add_custom_command(
+        TARGET usdNprImaging 
+        POST_BUILD 
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/usdNprImaging.lib" "${CMAKE_CURRENT_BINARY_DIR}/usdNprImaging.lib"
+        COMMENT "Copying ${copy_file_name} to build directory"
+)
+endif()
+
