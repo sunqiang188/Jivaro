@@ -37,7 +37,6 @@ UsdNprSceneIndexPlugin::_AppendSceneIndex(
     const HdSceneIndexBaseRefPtr &inputScene,
     const HdContainerDataSourceHandle &inputArgs)
 {
-    std::cout << "APPEND FUCKIN USD NPR SCENE INDEX !!!" << std::endl;
     return UsdNprSceneIndex::New(inputScene);
 }
 

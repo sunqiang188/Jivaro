@@ -774,15 +774,14 @@ DihedralConstraint::DihedralConstraint(Body* body, const VtArray<int>& elems,
   _rest.resize(numElements);
   for(size_t elemIdx = 0; elemIdx < numElements; ++elemIdx) {
     const GfVec3f x0(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 0] - offset]));
-    const GfVec3f x1(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1] - offset]));
-    const GfVec3f x2(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset]));
-    const GfVec3f x3(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 3] - offset]));
+    const GfVec3f x1(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 1] - offset]) - x0);
+    const GfVec3f x2(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 2] - offset]) - x0);
+    const GfVec3f x3(m.Transform(positions[_elements[elemIdx * ELEM_SIZE + 3] - offset]) - x0);
 
-    GfVec3f n1 = GfCross(x1 - x0, x2 - x0).GetNormalized();
-    GfVec3f n2 = GfCross(x1 - x0, x3 - x0).GetNormalized();
+    const GfVec3f n1 = GfCross(x1, x2);
+    const GfVec3f n2 = GfCross(x1, x3);
 
-    float dot = GfClamp(GfDot(n1, n2), 0.f, 1.f);
-
+    float dot = GfClamp(GfDot(n1, n2), -1.f, 1.f);
     _rest[elemIdx] = std::acos(dot);
   }
 }
@@ -818,11 +817,9 @@ void DihedralConstraint::SolvePosition(Particles* particles, float dt)
     n1 = GfCross(x1, x2);
     n2 = GfCross(x1, x3);
 
-    n1.Normalize();
-    n2.Normalize();
-    dot = GfClamp(GfDot(n1, n2), 0.f, 1.f);
+    float dot = GfClamp(GfDot(n1, n2), -1.f, 1.f);
+    float angle = std::acos(dot);
 
-    angle = std::acos(dot);	
     if (angle < 1e-6 || std::isnan(dot)) continue;
 
     q2 =  (x1 ^ n2 + n1 ^ x1 * dot) / ((x1 ^ x2).GetLength() + 1e-6f);
@@ -834,7 +831,7 @@ void DihedralConstraint::SolvePosition(Particles* particles, float dt)
 
     float denom = alpha + (w0 * GfDot(q0, q0) + w1 * GfDot(q1, q1) + w2 * GfDot(q2, q2) + w3 * GfDot(q3, q3));
 	  if (denom < 1e-6f) continue;
-		lambda = -GfSqrt(1.0f - dot * dot) * (angle - _rest[elem]) / denom;
+		lambda = -(angle - _rest[elem]) / denom;
 
     _correction[elem * ELEM_SIZE + 0] += w0 * lambda * q0;
     _correction[elem * ELEM_SIZE + 1] += w1 * lambda * q1;

@@ -3,6 +3,7 @@
 #include <pxr/imaging/hd/basisCurvesSchema.h>
 
 #include "sceneIndex.h"
+#include <iostream>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

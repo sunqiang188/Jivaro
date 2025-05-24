@@ -94,49 +94,45 @@ void _AddSampleCallback(int index)
   UsdStageRefPtr stage = Application::Get()->GetModel()->GetStage();
   Time* time = Time::Get();
   UndoBlock block;
-  switch(index) {
-    case 1: 
-      std::cout << "Add Translate Sample..." << std::endl;
-      for(auto& selected: selection->GetItems()) {
-        UsdPrim prim = stage->GetPrimAtPath(selected.path);
-        if(!prim.IsA<UsdGeomXformable>()) continue;
+ 
+  for(auto& selected: selection->GetItems()) {
+    UsdPrim prim = stage->GetPrimAtPath(selected.path);
+    if(!prim.IsA<UsdGeomXformable>()) continue;
 
-        std::cout << "found prim : " << prim.GetPath() << std::endl;
+    std::cout << "found prim : " << prim.GetPath() << std::endl;
 
-        UsdGeomXformCommonAPI xformApi(prim);
+    UsdGeomXformCommonAPI xformApi(prim);
 
-        // Define variables to hold transform components
-        GfVec3d translation;
-        GfVec3f rotation, scale, pivot;
-        UsdGeomXformCommonAPI::RotationOrder rotOrder;
+    // Define variables to hold transform components
+    GfVec3d translation;
+    GfVec3f rotation, scale, pivot;
+    UsdGeomXformCommonAPI::RotationOrder rotOrder;
 
-        // Retrieve transform components at frame 24
-        if (xformApi.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, UsdTimeCode(24.0))) {
-            std::cout << "Translation at frame " << time->GetActiveTime() << ": " << translation << std::endl;
-        } else {
-            std::cerr << "Failed to retrieve translation at frame " << time->GetActiveTime() << "." << std::endl;
-        }
+    // Retrieve transform components at frame 24
+    if (xformApi.GetXformVectors(&translation, &rotation, &scale, &pivot, &rotOrder, UsdTimeCode(24.0))) {
+        std::cout << "Translation at frame " << time->GetActiveTime() << ": " << translation << std::endl;
+    } else {
+        std::cerr << "Failed to retrieve translation at frame " << time->GetActiveTime() << "." << std::endl;
+    }
 
+    switch(index) {
+      case 1: 
+        std::cout << "Add Translate Sample..." << std::endl;
         xformApi.SetTranslate(translation, time->GetActiveTime());
+        break;
 
-      }
+      case 2:
+        std::cout << "Add Rotation Sample..." << std::endl;
+        xformApi.SetRotate(rotation, rotOrder, time->GetActiveTime());
+        break;
 
-      break;
+      case 3:
+        std::cout << "Add Scale Sample..." << std::endl;
+        xformApi.SetScale(scale, time->GetActiveTime());
+        break;
 
-    case 2:
-      std::cout << "Add Rotation Sample..." << std::endl;
-      break;
-
-    case 3:
-      std::cout << "Add Scale Sample..." << std::endl;
-      break;
+    }
   }
-
-  std::cout << "on selected objects:";
-  for(const auto& selected: selection->GetItems())
-    std::cout << selected.path << ",";
-  
-    std::cout << std::endl;
 }
 
 void _XXX_CALLBACK__(int index)

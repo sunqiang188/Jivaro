@@ -25,6 +25,7 @@ JVR_NAMESPACE_OPEN_SCOPE
 //==================================================================================
 void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
 {
+  std::cout << "ENSURE XFORM COMMON API on " << prim.GetPath() << std::endl;
   UsdGeomXformable xformable(prim);
  
   GfVec3d translation;
@@ -34,13 +35,7 @@ void  _EnsureXformCommonAPI(UsdPrim prim, const UsdTimeCode& timeCode)
   UsdGeomXformCommonAPI::RotationOrder rotOrder;
   UsdGeomXformCommonAPI api(prim);
   api.GetXformVectorsByAccumulation(&translation, &rotation, &scale, &pivot, &rotOrder, timeCode);
-
-  bool resetsXformStack(false);
-  std::vector<UsdGeomXformOp> ops =  xformable.GetOrderedXformOps(&resetsXformStack);
-
-  for(auto& op: ops)
-    prim.RemoveProperty(op.GetAttr().GetName());
-
+    
   xformable.ClearXformOpOrder();
   api.SetXformVectors(translation, rotation, scale, pivot, rotOrder, timeCode);
 }
