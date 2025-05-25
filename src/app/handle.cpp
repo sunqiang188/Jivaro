@@ -16,6 +16,7 @@
 #include "../app/selection.h"
 #include "../app/application.h"
 #include "../app/commands.h"
+#include "../app/utils.h"
 #include "../geometry/utils.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
@@ -182,74 +183,6 @@ BaseHandle::SetVisibility(short axis, short mask)
 {
 }
 
-static
-bool _HasCommonXformOps(const UsdGeomXformable& xformable)
-{
-  bool tempResetXformStack;
-  std::vector<UsdGeomXformOp> xformOps =
-      xformable.GetOrderedXformOps(&tempResetXformStack);
-  if (xformOps.size() > 5)
-      return false;
-
-  // The expected order is:
-  // ["xformOp:translate", "xformOp:translate:pivot", "xformOp:rotateABC",
-  //  "xformOp:scale", "!invert!xformOp:translate:pivot"]
-  auto it = xformOps.begin();
-
-  // This holds the computed attribute name tokens so that we can avoid
-  // hard-coding them.
-  // The name for the rotate op is not computed here because it can vary.
-  static const struct {
-    TfToken translate = UsdGeomXformOp::GetOpName(
-      UsdGeomXformOp::TypeTranslate);
-    TfToken pivot = UsdGeomXformOp::GetOpName(
-      UsdGeomXformOp::TypeTranslate, UsdGeomTokens->pivot);
-    TfToken scale = UsdGeomXformOp::GetOpName(
-      UsdGeomXformOp::TypeScale);
-  } attrNames;
-
-  // Search one-by-one for the ops in the correct order.
-  // We can skip ops in the "expected" order (that is, all the common ops are
-  // optional) but we can't skip ops in the "actual" order (that is, extra ops
-  // aren't allowed).
-  //
-  // Note, in checks below, avoid using UsdGeomXformOp::GetOpName() because
-  // it will construct strings in the case of an inverted op.
-  UsdGeomXformOp t;
-  if (it != xformOps.end() && it->GetName() == attrNames.translate && !it->IsInverseOp())
-    ++it;
-
-  UsdGeomXformOp p;
-  if (it != xformOps.end() && it->GetName() == attrNames.pivot && !it->IsInverseOp())
-    ++it;
-
-  UsdGeomXformOp r;
-  if (it != xformOps.end() && UsdGeomXformCommonAPI::CanConvertOpTypeToRotationOrder(it->GetOpType()) &&
-        !it->IsInverseOp())
-      ++it;
-
-  UsdGeomXformOp s;
-  if (it != xformOps.end() && it->GetName() == attrNames.scale && !it->IsInverseOp())
-    ++it;
-
-  UsdGeomXformOp pInv;
-  if (it != xformOps.end() && it->GetName() == attrNames.pivot && it->IsInverseOp())
-    ++it;
-
-  // If we did not reach the end of the xformOps vector, then there were
-  // extra ops that did not match any of the expected ops.
-  // This means that the xformOps vector isn't XformCommonAPI-compatible.
-  if (it != xformOps.end())
-    return false;
-
-  // Verify that translate pivot and inverse translate pivot are either both 
-  // present or both absent.
-  if ((bool) p != (bool) pInv)
-    return false;
-
-  return true;
-}
-
 void 
 BaseHandle::ResetSelection()
 {
@@ -269,7 +202,7 @@ BaseHandle::ResetSelection()
     UsdPrim prim = stage->GetPrimAtPath(item.path);
     if (!prim.IsValid() || !prim.IsA<UsdGeomXformable>())continue;
 
-    if (!_HasCommonXformOps(UsdGeomXformable(prim)))
+    if (!Utils::HasCommonXformOps(UsdGeomXformable(prim)))
       paths.push_back(prim.GetPath());
   }
 
@@ -799,10 +732,14 @@ TranslateHandle::_UpdateTargets(bool interacting)
     UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
     UsdGeomXformCommonAPI xformApi(targetPrim);
 
+    bool hasSamples = Utils::HasXformOpSamples(targetPrim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
+
     // Get latest rotation values to give a hint to the decompose function
     ManipXformVectors vectors;
     xformApi.GetXformVectorsByAccumulation(&vectors.translation, &vectors.rotation, &vectors.scale,
-      &vectors.pivot, &vectors.rotOrder, activeTime);
+      &vectors.pivot, &vectors.rotOrder, 
+      hasSamples ? activeTime : UsdTimeCode::Default());
 
     if(_mode & MODE_LOCAL) 
       xformMatrix = GfMatrix4d(localMatrix * target.base * target.parent.GetInverse() );
@@ -810,7 +747,8 @@ TranslateHandle::_UpdateTargets(bool interacting)
       xformMatrix = GfMatrix4d(target.offset * _matrix * target.parent.GetInverse() );
 
     target.current.translation = GfVec3f(xformMatrix.GetRow3(3) - vectors.pivot);
-    xformApi.SetTranslate(target.current.translation, activeTime);
+    xformApi.SetTranslate(target.current.translation, 
+      hasSamples ? activeTime : UsdTimeCode::Default());
   }
   
   if(!interacting)

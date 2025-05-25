@@ -29,6 +29,7 @@
 #include "../app/handle.h"
 #include "../app/selection.h"
 #include "../app/index.h"
+#include "../app/utils.h"
 
 JVR_NAMESPACE_OPEN_SCOPE
 
@@ -472,8 +473,11 @@ TranslateCommand::TranslateCommand(UsdStageRefPtr stage,
   UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
-    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-    xformApi.SetTranslate(target.current.translation, timeCode);
+    UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(targetPrim);
+    bool haveSamples = Utils::HasXformOpSamples(targetPrim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
+    xformApi.SetTranslate(target.current.translation, haveSamples ? timeCode : UsdTimeCode::Default());
   }
   UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();

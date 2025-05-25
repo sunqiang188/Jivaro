@@ -401,7 +401,7 @@ PropertyEditorUI::Draw()
     if (_DrawAssetInfo(_prim))
       ImGui::Separator();
 
-    if (_DrawXformsCommon(UsdTimeCode::Default()))
+    if (_DrawXformsCommon(Time::Get()->GetActiveTime()))
       ImGui::Separator();
 
     if (ImGui::BeginTable("##DrawPropertyEditorTable", 3,

@@ -149,14 +149,20 @@ struct PrimInfo {
 };
 
 
-static
+
 std::vector<UsdPrim> _GetAllPrimsOfType(UsdStagePtr const &stage, 
                                         TfType const& schemaType);
 
-static PrimInfo GetPrimInfo(const UsdPrim &prim, const UsdTimeCode time);
+PrimInfo GetPrimInfo(const UsdPrim &prim, const UsdTimeCode time);
 
-}
+bool HasXformOpSamples(const pxr::UsdPrim& prim, const TfToken& opName=TfToken());
 
+bool HasXformOpSampleAtTime(const pxr::UsdPrim& prim, double time, const TfToken& opName=TfToken());
+
+bool HasCommonXformOps(const UsdGeomXformable& xformable);
+
+
+} // namespace Utils
 
 JVR_NAMESPACE_CLOSE_SCOPE
 

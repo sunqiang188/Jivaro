@@ -1055,9 +1055,13 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 
       damp = GfDot((particles->velocity[index] -  
         _collision->GetContactVelocity(index, c)) * dt * dt,  normal) * normal * _damp; 
-      correction =  w0 / w *  -d * normal; - damp;
+      
+      correction =  w0 / w *  -d * normal - damp;
 
-      accum += correction;
+      GfVec3f friction = _ComputeFriction(body->GetSelfCollisionFriction(), correction, 
+        particles->velocity[index] - particles->velocity[other]);
+
+      accum += correction + w0 / w * friction;
 
 
       numContactUsed++;
@@ -1066,9 +1070,6 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
     if(numContactUsed) {
       float rN = 1.f / (float)numContactUsed;
       _correction[elem] = accum * rN;
-            
-		  GfVec3f friction = _ComputeFriction(body->GetSelfCollisionFriction(), _correction[elem], velocity * rN);
-      _correction[elem]  += w0 / w * friction;
     }
   }
 }
@@ -1078,13 +1079,10 @@ void CollisionConstraint::_SolvePositionSelf(Particles* particles, float dt)
 void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
 {
   _ResetCorrection();
-
+  
   const size_t numElements = _elements.size();
   GfVec3f velocity, normal;
   float d, w0, w1, w;
-
-  float alpha = 0.01f;  // global velocity damping
-  float beta  = 0.1f;   // constraint-based vibration damping
 
   for (size_t elem = 0; elem < numElements; ++elem) {
     size_t index = _elements[elem];
@@ -1101,6 +1099,32 @@ void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
       w = w0 + w1;
       if(w < 1e-6) continue;
 
+      GfVec3f normal = _collision->GetContactNormal(index, c);
+      
+      GfVec3f delta = ((particles->position[index] - particles->previous[index]) - 
+        (particles->position[other] - particles->previous[other])) / dt;
+
+      float normalComponent = GfDot(delta, normal);
+      GfVec3f tangentDelta = delta - normal * normalComponent;
+
+      float tangLength = tangentDelta.GetLength();
+      if (tangLength < 1e-6f)continue;
+
+      float maxFrictionImpulse = GfAbs(normalComponent) * _collision->GetFriction();
+
+      GfVec3f tangentDir = tangentDelta / tangLength;
+      float impulseMag = GfMin(tangLength, maxFrictionImpulse) / w;
+
+      GfVec3f frictionImpulse = -impulseMag * tangentDir;
+
+      velocity = frictionImpulse * particles->invMass[index];
+      numContactUsed++;
+
+      /*
+      GfVec3f averageVelocity = (particles->velocity[index] + particles->velocity[other]) * 0.5f;
+      velocity += -particles->velocity[index] + (particles->velocity[index] - averageVelocity);
+      numContactUsed++;
+      
       velocity += _collision->GetContactVelocity(index, c);
 
       GfVec3f dp = particles->predicted[index] - particles->previous[index];
@@ -1112,11 +1136,13 @@ void CollisionConstraint::_SolveVelocitySelf(Particles* particles, float dt)
       velocity += damping;
 
       numContactUsed++;
+    
+      */
     }
     
     if (numContactUsed) {
       float rN = 1.f / (float)numContactUsed;
-      _correction[elem] = w0 / w * (-particles->velocity[index] + velocity * rN) * 0.5f;
+      _correction[elem] = w0 / w * velocity * rN;
       
     }
   }
