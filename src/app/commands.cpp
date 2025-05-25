@@ -467,8 +467,12 @@ TranslateCommand::TranslateCommand(UsdStageRefPtr stage,
   for (auto& target : targets) {
     UsdPrim prim = stage->GetPrimAtPath(target.path);
     UsdGeomXformCommonAPI xformApi(prim);
+
+    bool haveSamples = Utils::HasXformOpSamples(prim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
    
-    xformApi.SetTranslate(target.previous.translation, timeCode);
+    xformApi.SetTranslate(target.previous.translation, 
+      haveSamples ? timeCode : UsdTimeCode::Default());
   }
   UndoRouter::Get().TransferEdits(&_inverse);
 
@@ -477,7 +481,8 @@ TranslateCommand::TranslateCommand(UsdStageRefPtr stage,
     UsdGeomXformCommonAPI xformApi(targetPrim);
     bool haveSamples = Utils::HasXformOpSamples(targetPrim, 
       UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
-    xformApi.SetTranslate(target.current.translation, haveSamples ? timeCode : UsdTimeCode::Default());
+    xformApi.SetTranslate(target.current.translation, 
+      haveSamples ? timeCode : UsdTimeCode::Default());
   }
   UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();
@@ -499,13 +504,24 @@ RotateCommand::RotateCommand(UsdStageRefPtr stage,
   for (auto& target: targets) {
     UsdPrim prim = stage->GetPrimAtPath(target.path);
     UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-    xformApi.SetRotate(target.previous.rotation, target.previous.rotOrder, timeCode);
+
+    bool haveSamples = Utils::HasXformOpSamples(prim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
+
+    xformApi.SetRotate(target.previous.rotation, target.previous.rotOrder, 
+      haveSamples ? timeCode : UsdTimeCode::Default());
   }
   UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
-    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-    xformApi.SetRotate(target.current.rotation, target.current.rotOrder, timeCode);
+    UsdPrim prim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(prim);
+
+    bool haveSamples = Utils::HasXformOpSamples(prim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
+
+    xformApi.SetRotate(target.current.rotation, target.current.rotOrder, 
+      haveSamples ? timeCode : UsdTimeCode::Default());
   }
   UndoRouter::Get().TransferEdits(&_inverse);
   AttributeChangedNotice().Send();
@@ -530,13 +546,24 @@ ScaleCommand::ScaleCommand(UsdStageRefPtr stage,
     UsdPrim prim = stage->GetPrimAtPath(target.path);
   
     UsdGeomXformCommonAPI xformApi(prim);
-    xformApi.SetScale(target.previous.scale, timeCode);
+
+    bool haveSamples = Utils::HasXformOpSamples(prim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
+
+    xformApi.SetScale(target.previous.scale, 
+      haveSamples ? timeCode : UsdTimeCode::Default());
   }
   UndoRouter::Get().TransferEdits(&_inverse);
 
   for (auto& target : targets) {
-    UsdGeomXformCommonAPI xformApi(stage->GetPrimAtPath(target.path));
-    xformApi.SetScale(target.current.scale, timeCode);
+    UsdPrim prim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(prim);
+
+    bool haveSamples = Utils::HasXformOpSamples(prim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
+
+    xformApi.SetScale(target.current.scale, 
+      haveSamples ? timeCode : UsdTimeCode::Default());
   }
 
   UndoRouter::Get().TransferEdits(&_inverse);

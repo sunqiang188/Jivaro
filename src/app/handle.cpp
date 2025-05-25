@@ -732,14 +732,14 @@ TranslateHandle::_UpdateTargets(bool interacting)
     UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
     UsdGeomXformCommonAPI xformApi(targetPrim);
 
-    bool hasSamples = Utils::HasXformOpSamples(targetPrim, 
+    bool haveSamples = Utils::HasXformOpSamples(targetPrim, 
       UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeTranslate));
 
     // Get latest rotation values to give a hint to the decompose function
     ManipXformVectors vectors;
     xformApi.GetXformVectorsByAccumulation(&vectors.translation, &vectors.rotation, &vectors.scale,
       &vectors.pivot, &vectors.rotOrder, 
-      hasSamples ? activeTime : UsdTimeCode::Default());
+      haveSamples ? activeTime : UsdTimeCode::Default());
 
     if(_mode & MODE_LOCAL) 
       xformMatrix = GfMatrix4d(localMatrix * target.base * target.parent.GetInverse() );
@@ -748,7 +748,7 @@ TranslateHandle::_UpdateTargets(bool interacting)
 
     target.current.translation = GfVec3f(xformMatrix.GetRow3(3) - vectors.pivot);
     xformApi.SetTranslate(target.current.translation, 
-      hasSamples ? activeTime : UsdTimeCode::Default());
+      haveSamples ? activeTime : UsdTimeCode::Default());
   }
   
   if(!interacting)
@@ -986,11 +986,14 @@ RotateHandle::_UpdateTargets(bool interacting)
     else
       xformMatrix = GfMatrix4d(target.parent.GetInverse() * target.offset * _matrix);
 
+    bool haveSamples = Utils::HasXformOpSamples(targetPrim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformCommonAPI::ConvertRotationOrderToOpType(target.current.rotOrder)));
+
     const RotationDesc rotation =
-      _ResolveRotation(target, xformApi, xformMatrix, activeTime);
+      _ResolveRotation(target, xformApi, xformMatrix, haveSamples ? activeTime : UsdTimeCode::Default());
     target.current.rotation = rotation.first;
     target.current.rotOrder = rotation.second;
-    xformApi.SetRotate(rotation.first, rotation.second, activeTime);
+    xformApi.SetRotate(rotation.first, rotation.second, haveSamples ? activeTime : UsdTimeCode::Default());
   }
 
   if (!interacting) 
@@ -1377,6 +1380,32 @@ ScaleHandle::_UpdateTargets(bool interacting)
   UsdTimeCode activeTime(
     time->IsPlaying() ? UsdTimeCode::Default() : time->GetActiveTime());
   Selection* selection = app->GetModel()->GetSelection();
+
+  for (auto& target : _targets) {
+    UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
+    UsdGeomXformCommonAPI xformApi(targetPrim);
+
+    bool haveSamples = Utils::HasXformOpSamples(targetPrim, 
+      UsdGeomXformOp::GetOpName(UsdGeomXformOp::TypeScale));
+
+    ManipXformVectors vectors;
+    xformApi.GetXformVectorsByAccumulation(&vectors.translation, &vectors.rotation, &vectors.scale,
+      &vectors.pivot, &vectors.rotOrder, 
+      haveSamples ? activeTime : UsdTimeCode::Default());
+
+    GfMatrix4d xformMatrix(target.parent.GetInverse() * target.offset * _matrix);
+
+    xformApi.SetScale(target.previous.scale + 
+      GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]), 
+      haveSamples ? activeTime : UsdTimeCode::Default());
+
+    target.current.scale = target.previous.scale +
+      GfVec3f(xformMatrix[0][0], xformMatrix[1][1], xformMatrix[2][2]);
+  }
+  
+  if(!interacting)
+    ADD_COMMAND(ScaleCommand, Application::Get()->GetModel()->GetStage(), _targets, activeTime);
+    /*
   if (interacting) {
     for (auto& target : _targets) {
       UsdPrim targetPrim = stage->GetPrimAtPath(target.path);
@@ -1400,6 +1429,7 @@ ScaleHandle::_UpdateTargets(bool interacting)
 
     ADD_COMMAND(ScaleCommand, Application::Get()->GetModel()->GetStage(), _targets, activeTime);
   }
+    */
 }
 
 
