@@ -12,23 +12,23 @@ TF_DECLARE_REF_PTRS(UsdNprSceneIndex);
 class UsdNprSceneIndex : public HdSingleInputFilteringSceneIndexBase 
 {
 public:
-    static UsdNprSceneIndexRefPtr New(
-      const HdSceneIndexBaseRefPtr  inputSceneIndex){
-        return TfCreateRefPtr(new UsdNprSceneIndex(inputSceneIndex));}
+	static UsdNprSceneIndexRefPtr New(
+		const HdSceneIndexBaseRefPtr  inputSceneIndex){
+			return TfCreateRefPtr(new UsdNprSceneIndex(inputSceneIndex));}
 
 public:
-    USDNPRIMAGING_API
-    HdSceneIndexPrim GetPrim(const SdfPath& primPath) const override;
-    USDNPRIMAGING_API
-    SdfPathVector GetChildPrimPaths(const SdfPath& primPath) const override;
+	USDNPRIMAGING_API
+	HdSceneIndexPrim GetPrim(const SdfPath& primPath) const override;
+	USDNPRIMAGING_API
+	SdfPathVector GetChildPrimPaths(const SdfPath& primPath) const override;
 
 protected:
-    UsdNprSceneIndex(const HdSceneIndexBaseRefPtr  &inputSceneIndex);
-    ~UsdNprSceneIndex();
+	UsdNprSceneIndex(const HdSceneIndexBaseRefPtr  &inputSceneIndex);
+	~UsdNprSceneIndex();
 
-    void _PrimsAdded(const HdSceneIndexBase& sender, const HdSceneIndexObserver::AddedPrimEntries& entries) override;
-    void _PrimsRemoved(const HdSceneIndexBase& sender, const HdSceneIndexObserver::RemovedPrimEntries& entried) override;
-    void _PrimsDirtied(const HdSceneIndexBase& sender, const HdSceneIndexObserver::DirtiedPrimEntries& entries) override;
+	void _PrimsAdded(const HdSceneIndexBase& sender, const HdSceneIndexObserver::AddedPrimEntries& entries) override;
+	void _PrimsRemoved(const HdSceneIndexBase& sender, const HdSceneIndexObserver::RemovedPrimEntries& entried) override;
+	void _PrimsDirtied(const HdSceneIndexBase& sender, const HdSceneIndexObserver::DirtiedPrimEntries& entries) override;
 private:
     
 };

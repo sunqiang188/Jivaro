@@ -76,7 +76,7 @@ PopupUI::MouseButton(int button, int action, int mods)
     }
     std::cout << "------------------------------" << std::endl;
     if(_TouchEdge(GfVec2f(x, y), GfVec2f(_x, _y), GfVec2f(_x+_width, _y+_height)))
-        std::cout << "Touch Fuckin Edge" << std::endl;
+        std::cout << "Touch PopupUI Edge" << std::endl;
 
     if (button == GLFW_MOUSE_BUTTON_LEFT)_drag = true;
   }
@@ -89,10 +89,10 @@ void
 PopupUI::MouseMove(int x, int y)
 {
   if(_TouchEdge(GfVec2f(x, y), GfVec2f(_x, _y), GfVec2f(_x+_width, _y+_height)))
-        std::cout << "Touch Fuckin Edge" << std::endl;
+        std::cout << "Touch PopupUI Edge" << std::endl;
   if (_drag) {
 
-}
+  }
 }
 
 void 

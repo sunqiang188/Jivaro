@@ -14,20 +14,20 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 TF_DEFINE_PRIVATE_TOKENS (
-    _tokens,
-    ((sceneIndexPluginName, "UsdNprSceneIndexPlugin")));
+	_tokens,
+	((sceneIndexPluginName, "UsdNprSceneIndexPlugin")));
 
 TF_REGISTRY_FUNCTION(TfType) {
-    HdSceneIndexPluginRegistry::Define<UsdNprSceneIndexPlugin>();
+	HdSceneIndexPluginRegistry::Define<UsdNprSceneIndexPlugin>();
 }
 
 TF_REGISTRY_FUNCTION(HdSceneIndexPlugin) {
-    HdSceneIndexPluginRegistry::GetInstance().RegisterSceneIndexForRenderer(
-        TfToken(),
-        _tokens->sceneIndexPluginName,
-        nullptr,
-        0,
-        HdSceneIndexPluginRegistry::InsertionOrderAtStart);
+	HdSceneIndexPluginRegistry::GetInstance().RegisterSceneIndexForRenderer(
+			TfToken(),
+			_tokens->sceneIndexPluginName,
+			nullptr,
+			0,
+			HdSceneIndexPluginRegistry::InsertionOrderAtStart);
 }
 
 UsdNprSceneIndexPlugin::UsdNprSceneIndexPlugin() = default;
@@ -37,7 +37,7 @@ UsdNprSceneIndexPlugin::_AppendSceneIndex(
     const HdSceneIndexBaseRefPtr &inputScene,
     const HdContainerDataSourceHandle &inputArgs)
 {
-    return UsdNprSceneIndex::New(inputScene);
+	return UsdNprSceneIndex::New(inputScene);
 }
 
 

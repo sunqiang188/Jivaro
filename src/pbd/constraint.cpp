@@ -962,21 +962,19 @@ void CollisionConstraint::_SolvePositionGeom(Particles* particles, float dt)
     if(particles->mass[index] < 1e-9 || d > 0.f) continue;
 
     const GfVec3f normal = _collision->GetContactNormal(index);
+    const GfVec3f velRel = particles->velocity[index] - _collision->GetContactVelocity(index);
 
     particles->color[index] = GfVec3f(0.75, 0.75, 0.5);
-
-    float damp = 
-      -_collision->GetDamp() * 
-      GfDot(particles->velocity[index] - _collision->GetContactVelocity(index), normal);
     
-    float lambdaN = -(d + dt * damp)/ (particles->invMass[index] + alpha);
+    float lambdaN = -d/ (particles->invMass[index] + alpha);
     _correction[elem] += lambdaN * normal * particles->invMass[index];
 
-    GfVec3f friction = _ComputeFriction(_collision->GetFriction(), _correction[elem], 
-      particles->velocity[index] - _collision->GetContactVelocity(index));
+    float vn = GfDot(velRel, normal);
+    if (_collision->GetDamp() > 0.f)
+      particles->velocity[index] -= _collision->GetDamp() * vn * normal;
 
-    _correction[elem] += friction;
-
+    _correction[elem] += 
+      _ComputeFriction(_collision->GetFriction(), _correction[elem], velRel);
     
   }
 }

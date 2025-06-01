@@ -47,7 +47,7 @@ UsdNprComputeNormals( const VtArray<GfVec3f>& positions,
   memset(vertexNormals.data(), 0.f, numPoints * sizeof(GfVec3f));
 
   // first compute triangle normals
-  int totalNumTriangles = triangles.size()/3;
+  size_t totalNumTriangles = triangles.size()/3;
   VtArray<GfVec3f> triangleNormals;
   triangleNormals.resize(totalNumTriangles);
 
@@ -59,7 +59,7 @@ UsdNprComputeNormals( const VtArray<GfVec3f>& positions,
   }
 
   // then polygons normals
-  int numPolygons = counts.size();
+  size_t numPolygons = counts.size();
   polygonNormals.resize(numPolygons);
   int base = 0;
   for(int i=0; i < counts.size(); ++i)
@@ -96,7 +96,7 @@ UsdNprComputeTriangleNormals( const VtArray<GfVec3f>& positions,
                               const VtArray<int>& samples,
                               VtArray<GfVec3f>& normals)
 {
-  int totalNumTriangles = samples.size()/3;
+  size_t totalNumTriangles = samples.size()/3;
   normals.resize(totalNumTriangles);
 
   for(int i = 0; i < totalNumTriangles; ++i)
