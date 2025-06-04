@@ -4,7 +4,6 @@
 #ifndef PXR_USD_IMAGING_USD_NPR_IMAGING_CONTOUR_ADAPTER_H
 #define PXR_USD_IMAGING_USD_NPR_IMAGING_CONTOUR_ADAPTER_H
 
-
 #include "pxr/pxr.h"
 #include "pxr/base/gf/vec3f.h"
 #include "pxr/base/gf/matrix4d.h"
@@ -20,179 +19,176 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+struct _ContourAdapterComputeDatas
+{
+	const UsdPrim *prim;
+	double time;
+	const UsdNprStrokeParams *strokeParams;
+	UsdNprStrokeGraph *graph;
 
-struct _ContourAdapterComputeDatas {
-  const UsdPrim* prim;
-  double time;
-  const UsdNprStrokeParams* strokeParams;
-  UsdNprStrokeGraph* graph;
+	UsdNprHalfEdgeMesh *halfEdgeMesh;
+	GfMatrix4d viewPointMatrix;
+	UsdNprEdgeClassification classification;
 
-  UsdNprHalfEdgeMesh* halfEdgeMesh;
-  GfMatrix4d viewPointMatrix;
-  UsdNprEdgeClassification classification;
-
-  bool drawSilhouette;
-  bool drawCrease;
-  bool drawBoundary;
+	bool drawSilhouette;
+	bool drawCrease;
+	bool drawBoundary;
 };
 
-typedef TfHashMap<SdfPath, UsdNprHalfEdgeMeshSharedPtr, SdfPath::Hash> 
-  UsdNprHalfEdgeMeshMap;
-
+typedef TfHashMap<SdfPath, UsdNprHalfEdgeMeshSharedPtr, SdfPath::Hash>
+		UsdNprHalfEdgeMeshMap;
 
 /// \class UsdNprImagingContourAdapter
 ///
 /// Delegate support for UsdNprContour.
 ///
-class UsdNprImagingContourAdapter : public UsdImagingGprimAdapter {
+class UsdNprImagingContourAdapter : public UsdImagingGprimAdapter
+{
 public:
-    typedef UsdImagingGprimAdapter BaseAdapter;
+	typedef UsdImagingGprimAdapter BaseAdapter;
 
-    UsdNprImagingContourAdapter()
-        : UsdImagingGprimAdapter(){}
+	UsdNprImagingContourAdapter()
+			: UsdImagingGprimAdapter() {}
 
-    USDNPRIMAGING_API
-    virtual ~UsdNprImagingContourAdapter();
+	USDNPRIMAGING_API
+	virtual ~UsdNprImagingContourAdapter();
 
-    USDNPRIMAGING_API
-    SdfPath Populate(
-        UsdPrim const& prim,
-        UsdImagingIndexProxy* index,
-        UsdImagingInstancerContext const* instancerContext = nullptr) override;
+	USDNPRIMAGING_API
+	SdfPath Populate(
+			UsdPrim const &prim,
+			UsdImagingIndexProxy *index,
+			UsdImagingInstancerContext const *instancerContext = nullptr) override;
 
-    USDNPRIMAGING_API
-    bool IsSupported(UsdImagingIndexProxy const* index) const override;
+	USDNPRIMAGING_API
+	bool IsSupported(UsdImagingIndexProxy const *index) const override;
 
-    // ---------------------------------------------------------------------- //
-    /// \name Scene Index Support
-    // ---------------------------------------------------------------------- //
+	// ---------------------------------------------------------------------- //
+	/// \name Scene Index Support
+	// ---------------------------------------------------------------------- //
 
-    USDNPRIMAGING_API
-    virtual TfTokenVector GetImagingSubprims(UsdPrim const& prim);
+	USDNPRIMAGING_API
+	virtual TfTokenVector GetImagingSubprims(UsdPrim const &prim);
 
-    USDNPRIMAGING_API
-    virtual TfToken GetImagingSubprimType(
-        UsdPrim const& prim, TfToken const& subprim);
+	USDNPRIMAGING_API
+	virtual TfToken GetImagingSubprimType(
+			UsdPrim const &prim, TfToken const &subprim);
 
-    USDNPRIMAGING_API
-    virtual HdContainerDataSourceHandle GetImagingSubprimData(
-            UsdPrim const& prim,
-            TfToken const& subprim,
-            const UsdImagingDataSourceStageGlobals &stageGlobals);
+	USDNPRIMAGING_API
+	virtual HdContainerDataSourceHandle GetImagingSubprimData(
+			UsdPrim const &prim,
+			TfToken const &subprim,
+			const UsdImagingDataSourceStageGlobals &stageGlobals);
 
-    USDNPRIMAGING_API
-    virtual HdDataSourceLocatorSet InvalidateImagingSubprim(
-            UsdPrim const& prim,
-            TfToken const& subprim,
-            TfTokenVector const& properties,
-            UsdImagingPropertyInvalidationType invalidationType);
+	USDNPRIMAGING_API
+	virtual HdDataSourceLocatorSet InvalidateImagingSubprim(
+			UsdPrim const &prim,
+			TfToken const &subprim,
+			TfTokenVector const &properties,
+			UsdImagingPropertyInvalidationType invalidationType);
 
-    // ---------------------------------------------------------------------- //
-    /// \name Parallel Setup and Resolve
-    // ---------------------------------------------------------------------- //
+	// ---------------------------------------------------------------------- //
+	/// \name Parallel Setup and Resolve
+	// ---------------------------------------------------------------------- //
 
-    /// Thread Safe.
-    USDNPRIMAGING_API
-    void TrackVariability(
-        UsdPrim const& prim,
-        SdfPath const& cachePath,
-        HdDirtyBits* timeVaryingBits,
-        UsdImagingInstancerContext const* instancerContext = nullptr) 
-            const override;
+	/// Thread Safe.
+	USDNPRIMAGING_API
+	void TrackVariability(
+			UsdPrim const &prim,
+			SdfPath const &cachePath,
+			HdDirtyBits *timeVaryingBits,
+			UsdImagingInstancerContext const *instancerContext = nullptr)
+			const override;
 
-    /// Thread Safe.
-    USDNPRIMAGING_API
-    void UpdateForTime(
-        UsdPrim const& prim,
-        SdfPath const& cachePath, 
-        UsdTimeCode time,
-        HdDirtyBits requestedBits,
-        UsdImagingInstancerContext const* instancerContext = nullptr) 
-            const override;
+	/// Thread Safe.
+	USDNPRIMAGING_API
+	void UpdateForTime(
+			UsdPrim const &prim,
+			SdfPath const &cachePath,
+			UsdTimeCode time,
+			HdDirtyBits requestedBits,
+			UsdImagingInstancerContext const *instancerContext = nullptr)
+			const override;
 
-    // ---------------------------------------------------------------------- //
-    /// \name Change Processing API (public)
-    // ---------------------------------------------------------------------- //
-    USDNPRIMAGING_API
-    HdDirtyBits ProcessPropertyChange(const UsdPrim& prim,
-                                      const SdfPath& cachePath,
-                                      const TfToken& propertyName) override;
+	// ---------------------------------------------------------------------- //
+	/// \name Change Processing API (public)
+	// ---------------------------------------------------------------------- //
+	USDNPRIMAGING_API
+	HdDirtyBits ProcessPropertyChange(const UsdPrim &prim,
+																		const SdfPath &cachePath,
+																		const TfToken &propertyName) override;
 
-    USDNPRIMAGING_API
-    void ProcessPrimResync(SdfPath const& primPath,
-                           UsdImagingIndexProxy* index) override;
+	USDNPRIMAGING_API
+	void ProcessPrimResync(SdfPath const &primPath,
+												 UsdImagingIndexProxy *index) override;
 
-    USDNPRIMAGING_API
-    void ProcessPrimRemoval(SdfPath const& primPath,
-                            UsdImagingIndexProxy* index) override;
+	USDNPRIMAGING_API
+	void ProcessPrimRemoval(SdfPath const &primPath,
+													UsdImagingIndexProxy *index) override;
 
-    USDNPRIMAGING_API
-    void MarkDirty(UsdPrim const& prim,
-                           SdfPath const& cachePath,
-                           HdDirtyBits dirty,
-                           UsdImagingIndexProxy* index) override;   
+	USDNPRIMAGING_API
+	void MarkDirty(UsdPrim const &prim,
+								 SdfPath const &cachePath,
+								 HdDirtyBits dirty,
+								 UsdImagingIndexProxy *index) override;
 
-    // ---------------------------------------------------------------------- //
-    /// \name Data access
-    // ---------------------------------------------------------------------- //
-    USDNPRIMAGING_API
-    VtValue GetTopology(UsdPrim const& prim,
-                        SdfPath const& cachePath,
-                        UsdTimeCode time) const override;
+	// ---------------------------------------------------------------------- //
+	/// \name Data access
+	// ---------------------------------------------------------------------- //
+	USDNPRIMAGING_API
+	VtValue GetTopology(UsdPrim const &prim,
+											SdfPath const &cachePath,
+											UsdTimeCode time) const override;
 
-    USDNPRIMAGING_API
-    VtValue Get(UsdPrim const& prim,
-                SdfPath const& cachePath,
-                TfToken const& key,
-                UsdTimeCode time,
-                VtIntArray *outIndices) const override;     
-       
+	USDNPRIMAGING_API
+	VtValue Get(UsdPrim const &prim,
+							SdfPath const &cachePath,
+							TfToken const &key,
+							UsdTimeCode time,
+							VtIntArray *outIndices) const override;
+
 private:
-  /// Data for a contour instance.
-  struct _ContourData {
-    UsdNprHalfEdgeMeshMap           halfEdgeMeshes;
-    VtArray<GfVec3f>                points;
-    VtArray<GfVec3f>                colors;
-    HdMeshTopology                  topology;
-  };
+	/// Data for a contour instance.
+	struct _ContourData
+	{
+		UsdNprHalfEdgeMeshMap halfEdgeMeshes;
+		VtArray<GfVec3f> points;
+		VtArray<GfVec3f> colors;
+		HdMeshTopology topology;
+	};
 
-  void _PopulateStrokeParams(UsdPrim const& prim, UsdNprStrokeParams* params);
+	void _PopulateStrokeParams(UsdPrim const &prim, UsdNprStrokeParams *params);
 
-  void _ComputeOutputGeometry(
-    _ContourData* contourData, 
-    const UsdNprStrokeGraphList& strokeGraphs,
-    UsdImagingPrimvarDescCache* valueCache, 
-    SdfPath const& cachePath) const;
+	void _ComputeOutputGeometry(
+		_ContourData *contourData,
+		const UsdNprStrokeGraphList &strokeGraphs,
+		UsdImagingPrimvarDescCache *valueCache,
+		SdfPath const &cachePath) const;
 
-  void _ComputeNormalsGeometry(
-    _ContourData* contourData,
-    const UsdNprStrokeGraphList& strokeGraphs
-  ) const;
+	void _ComputeNormalsGeometry(
+		_ContourData *contourData,
+		const UsdNprStrokeGraphList &strokeGraphs) const;
 
-  void _ComputeHalfEdgesGeometry(
-    _ContourData* contourData,
-    const UsdNprStrokeGraphList& strokeGraphs
-  ) const;
+	void _ComputeHalfEdgesGeometry(
+		_ContourData *contourData,
+		const UsdNprStrokeGraphList &strokeGraphs) const;
 
-  _ContourData*  _GetContourData(const SdfPath& cachePath) const;
-  
-  //UsdNprContourCache _contourCache;
-  using _ContourDataMap =
-      std::unordered_map<SdfPath, std::shared_ptr<_ContourData>, SdfPath::Hash>;
-  _ContourDataMap _contourDataCache;
+	_ContourData *_GetContourData(const SdfPath &cachePath) const;
 
-  // shared half edge meshes
-  UsdNprHalfEdgeMeshMap           _halfEdgeMeshes;
+	// UsdNprContourCache _contourCache;
+	using _ContourDataMap =
+		std::unordered_map<SdfPath, std::shared_ptr<_ContourData>, SdfPath::Hash>;
+	_ContourDataMap _contourDataCache;
+
+	// shared half edge meshes
+	UsdNprHalfEdgeMeshMap _halfEdgeMeshes;
 };
 
 // ---------------------------------------------------------------------- //
 /// \name Computation
 // ---------------------------------------------------------------------- //
-static void 
-_BuildStrokes(_ContourAdapterComputeDatas& datas);
+static void
+_BuildStrokes(_ContourAdapterComputeDatas &datas);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // PXR_USD_IMAGING_USD_NPR_IMAGING_CONTOUR_ADAPTER_H
-
-

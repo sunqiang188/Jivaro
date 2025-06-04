@@ -860,7 +860,7 @@ void SparseMatrix<T>::SetColumn(size_t column, const SparseMatrix<T>::Vector& va
 template <typename T>
 void SparseMatrix<T>::AddInPlace(const SparseMatrix<T>& other)
 {
-  _matrix += other.matrix;
+  _matrix += other._matrix;
 }
 
 template <typename T>
