@@ -429,7 +429,7 @@ void
   float surfaceArea = _CreateRawSamples(nbSamples, points, normals, indices, seeds);
 
   if (radius <= 0.f) {
-    radius = std::sqrtf(surfaceArea / nbSamples) * 0.75f;
+    radius = std::sqrt(surfaceArea / nbSamples) * 0.75f;
   }
 
   _PoissonDiskFromSamples(&points[0], &normals[0], radius, seeds, samples);

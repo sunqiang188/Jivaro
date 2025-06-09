@@ -126,7 +126,7 @@ void Camera::FrameSelection(const GfBBox3d &selBBox)
   else {
     double halfFov = _fov * 0.5;
     double lengthToFit = selSize * frameFit;
-    _dist = lengthToFit / std::tanf(GfDegreesToRadians(halfFov));
+    _dist = lengthToFit / std::tan(GfDegreesToRadians(halfFov));
 
   }
   GfVec3d dir = (_pos - _lookat).GetNormalized();

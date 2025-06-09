@@ -40,8 +40,8 @@ MakeCircle(std::vector<GfVec3f>* points, float radius,
   points->resize(baseIndex + n);
   for (size_t k = 0; k < n; ++k) {
     (*points)[baseIndex + k] = m.TransformAffine(
-      GfVec3f(std::sinf(step * k) * radius, 0.f, 
-        std::cosf(step * k) * radius));
+      GfVec3f(std::sin(step * k) * radius, 0.f, 
+        std::cos(step * k) * radius));
   }
 }
 
@@ -61,13 +61,13 @@ MakeArc(std::vector<GfVec3f>* points, float radius,
   for (size_t k = 0; k < n; ++k) {
     if (startAngle < endAngle) {
       (*points)[baseIndex + k] = m.TransformAffine(
-        GfVec3f(std::sinf(step * k + endAngle) * radius, 0.f, 
-          std::cosf(step * k + endAngle) * radius));
+        GfVec3f(std::sin(step * k + endAngle) * radius, 0.f, 
+          std::cos(step * k + endAngle) * radius));
     }
     else {
       (*points)[baseIndex + k] = m.TransformAffine(
-        GfVec3f(std::sinf(step * k + startAngle) * radius, 0.f, 
-          std::cosf(step * k + startAngle) * radius));
+        GfVec3f(std::sin(step * k + startAngle) * radius, 0.f, 
+          std::cos(step * k + startAngle) * radius));
     }
   }
 }

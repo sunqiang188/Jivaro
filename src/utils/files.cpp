@@ -1,4 +1,5 @@
 #include "../utils/files.h"
+#include <cstring>
 
 JVR_NAMESPACE_OPEN_SCOPE
 

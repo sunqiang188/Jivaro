@@ -2,7 +2,7 @@
 #define JVR_GEOMETRY_INSTANCER_H
 
 #include <pxr/base/gf/ray.h>
-#include <pxr/usd/usdGeom/primvarsApi.h>
+#include <pxr/usd/usdGeom/primvarsAPI.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
 
 #include "../geometry/deformable.h"

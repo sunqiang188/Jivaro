@@ -92,7 +92,7 @@ short UsdNprHalfEdge::GetFlags(const GfVec3f* positions,
   if(s1 != s2) {
     flags |= EDGE_SILHOUETTE;
     *weight = 1.f - (
-      std::fabsf(weight1) / (std::fabsf(weight1) + std::fabsf(weight2))
+      std::fabs(weight1) / (std::fabs(weight1) + std::fabs(weight2))
     );
   }
   
@@ -157,7 +157,7 @@ void UsdNprHalfEdgeMesh::Init(const UsdGeomMesh& mesh, const UsdTimeCode& timeCo
 
   UsdNprHalfEdge* halfEdge = &_halfEdges[0];
   const int* indices = &faceVertexIndices[0];
-  uint32_t halfEdgeIndex = 0;
+  size_t halfEdgeIndex = 0;
 
   // for each face build half-edges and insert in map
   for(int faceIndex = 0; faceIndex < _numPolygons; ++ faceIndex) {

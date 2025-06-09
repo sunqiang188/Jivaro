@@ -36,9 +36,9 @@ protected:
   // integer coordinates
   inline GfVec3i _IntCoords(const GfVec3f& coords) const{
     return GfVec3i(
-      std::floorf(coords[0] * _scl),
-      std::floorf(coords[1] * _scl),
-      std::floorf(coords[2] * _scl)
+      std::floor(coords[0] * _scl),
+      std::floor(coords[1] * _scl),
+      std::floor(coords[2] * _scl)
     );
   };
 

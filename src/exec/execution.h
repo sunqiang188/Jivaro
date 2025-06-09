@@ -2,7 +2,7 @@
 #define JVR_EXEC_EXECUTION_H
 
 
-#include <pxr/base/tf/hashMap.h>
+#include <pxr/base/tf/hashmap.h>
 #include <pxr/usd/sdf/path.h>
 #include <pxr/usd/usd/stage.h>
 #include <pxr/base/work/loops.h>

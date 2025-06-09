@@ -12,7 +12,6 @@ usd_library(usdNpr
     PUBLIC_CLASSES
         contour
         tokens
-				contourSchema
 
     PUBLIC_HEADERS
         api.h
@@ -33,11 +32,6 @@ usd_library(usdNpr
         plugInfo.json
         generatedSchema.usda
         schema.usda
-)
-
-target_compile_definitions(usdNpr
-    PRIVATE
-        USDNPR_EXPORTS
 )
 
 add_custom_command(

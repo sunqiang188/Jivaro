@@ -30,11 +30,6 @@ usd_library(usdNprImaging
         plugInfo.json
 )
 
-target_compile_definitions(usdNprImaging
-    PRIVATE
-        USDNPRIMAGING_EXPORTS
-)
-
 if(MSVC)
     message("THIS IS MICROSOFT VISUAL STUDIO...")
     message("${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/usdNprImaging.lib")

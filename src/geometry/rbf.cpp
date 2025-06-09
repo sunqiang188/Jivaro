@@ -48,12 +48,12 @@ void RBF::SetKernelType(int type)
 
 // automaticaly compute the best epsilon
 void 
-RBF::_ComputeEpsilon(const Matrix& matrix)
+RBF::_ComputeEpsilon(const Matrix<float>& matrix)
 {
   size_t numRows = matrix.NumRows();
   
-  Vector minimums = matrix.GetColumnsMinimum();
-  Vector maximums = matrix.GetColumnsMaximum();
+  std::vector<float> minimums = matrix.GetColumnsMinimum();
+  std::vector<float> maximums = matrix.GetColumnsMaximum();
   float product = 1.f;
   size_t size = 0;
   for(size_t i = 0; i < matrix.NumColumns(); ++i) {
@@ -68,7 +68,7 @@ RBF::_ComputeEpsilon(const Matrix& matrix)
 
 // init
 void
-RBF::Init(const Matrix& keys, const Matrix& values)
+RBF::Init(const Matrix<float>& keys, const Matrix<float>& values)
 {
   _ComputeEpsilon(keys);
   _keys = keys;
@@ -99,18 +99,18 @@ RBF::Init(const Matrix& keys, const Matrix& values)
 // interpolate
 
 void
-RBF::Interpolate(const Matrix& querys, Matrix* result)
+RBF::Interpolate(const Matrix<float>& querys, Matrix<float>* result)
 {
   result->Resize(querys.NumRows(), _values.NumColumns());
 
   size_t nd = _keys.NumRows();
   size_t m = _keys.NumColumns();
   size_t ni = querys.NumRows();
-  Vector v(nd);
+  std::vector<float> v(nd);
   for(size_t column = 0; column < _values.NumColumns(); ++column) {
-    Vector results(ni);
-    Vector value = _values.GetColumn(column);
-    Vector weighted = _A.MultiplyVector(value);
+    std::vector<float> results(ni);
+    std::vector<float> value = _values.GetColumn(column);
+    std::vector<float> weighted = _A.MultiplyVector(value);
     for(size_t i = 0; i < ni ; ++i) {
       for(size_t j = 0; j < nd; ++j) {
         float r = 0.f;

@@ -4,7 +4,7 @@
 #include <pxr/base/arch/defines.h>
 #include <pxr/base/arch/timing.h>
 #include <pxr/base/tf/token.h>
-#include <pxr/base/tf/hashMap.h>
+#include <pxr/base/tf/hashmap.h>
 #include <pxr/base/tf/type.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/ray.h>

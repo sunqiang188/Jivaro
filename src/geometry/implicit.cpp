@@ -100,8 +100,8 @@ bool Plane::Closest(const GfVec3f& point, Location* hit,
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
     // store spherical coordinates
-    float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-    float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+    float polar = (-std::acoshf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+    float azimuth = (std::atanhf(local[0]/local[2])) * RADIANS_TO_DEGREES;
     hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
     return true;
   }
@@ -177,8 +177,8 @@ Sphere::Raycast(const GfRay& ray, Location* hit,
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
       // store spherical coordinates
-      float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-      float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+      float polar = (-std::acoshf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+      float azimuth = (std::atanhf(local[0]/local[2])) * RADIANS_TO_DEGREES;
       hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
       return true;
     }
@@ -195,8 +195,8 @@ bool Sphere::Closest(const GfVec3f& point, Location* hit,
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
     // store spherical coordinates
-    float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-    float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+    float polar = (-std::acoshf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+    float azimuth = (std::atanhf(local[0]/local[2])) * RADIANS_TO_DEGREES;
     hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
     return true;
   }
@@ -387,8 +387,8 @@ Cone::Raycast(const GfRay& ray, Location* hit,
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
       // store spherical coordinates
-      float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-      float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+      float polar = (-std::acoshf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+      float azimuth = (std::atanhf(local[0]/local[2])) * RADIANS_TO_DEGREES;
       hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
       return true;
     }
@@ -406,8 +406,8 @@ Cone::Closest(const GfVec3f& point, Location* hit,
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
     // store spherical coordinates
-    float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-    float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+    float polar = (-std::acoshf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+    float azimuth = (std::atanhf(local[0]/local[2])) * RADIANS_TO_DEGREES;
     hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
     return true;
   }
@@ -469,8 +469,8 @@ Cylinder::Raycast(const GfRay& ray, Location* hit,
     if(distance < maxDistance && distance < *minDistance) {
       *minDistance = distance;
       // store spherical coordinates
-      float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-      float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+      float polar = (-std::acoshf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+      float azimuth = (std::atanhf(local[0]/local[2])) * RADIANS_TO_DEGREES;
       hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
       return true;
     }
@@ -488,8 +488,8 @@ Cylinder::Closest(const GfVec3f& point, Location* hit,
   if(distance < maxDistance && distance < *minDistance) {
     *minDistance = distance;
     // store spherical coordinates
-    float polar = (-std::acosf(local[2]/_radius)) * RADIANS_TO_DEGREES;
-    float azimuth = (std::atanf(local[0]/local[2])) * RADIANS_TO_DEGREES;
+    float polar = (-std::acoshf(local[2]/_radius)) * RADIANS_TO_DEGREES;
+    float azimuth = (std::atanhf(local[0]/local[2])) * RADIANS_TO_DEGREES;
     hit->SetCoordinates(GfVec3f(_radius, polar, azimuth));
     return true;
   }

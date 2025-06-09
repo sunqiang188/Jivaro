@@ -925,7 +925,10 @@ function(_jvr_install_rpath rpathRef NAME)
                 string(REPLACE "$ORIGIN/" "@loader_path/" path "${path}/")
             endif()
         endif()
-
+            if("${path}/" MATCHES "^[$]ORIGIN/")
+                # Replace with origin path.
+                string(REPLACE "$ORIGIN/" "@loader_path/" path "${path}/")
+            endif()
         # Strip trailing slashes.
         string(REGEX REPLACE "/+$" "" path "${path}")
 

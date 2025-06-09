@@ -347,7 +347,7 @@ Shape::_MakeCircle(std::vector<GfVec3f>& points, float radius,
   float step = (360 / (float)numPoints) * DEGREES_TO_RADIANS;
   for(size_t k = 0; k < numPoints; ++k) {
     points.push_back(m.TransformAffine(
-      GfVec3f(std::sinf(step*k) * radius, 0.f, std::cosf(step*k) * radius)));
+      GfVec3f(std::sin(step*k) * radius, 0.f, std::cos(step*k) * radius)));
   }
 }
 
@@ -521,12 +521,12 @@ Shape::AddSphere(short index, float radius, size_t lats, size_t longs,
       _points.push_back(GfVec3f(0.f, -radius, 0.f));
     } else if(i < longs - 1) {
       float lng = M_PI *(-0.5 + (float)i/(float)(longs-1));
-      float y = radius * std::sinf(lng);
-      float yr = radius * std::cosf(lng);
+      float y = radius * std::sin(lng);
+      float yr = radius * std::cos(lng);
       for(size_t j=0; j < lats; ++j) {
         float lat = 2 * M_PI * ((float)(j-1)*(1.f/(float)lats));
-        float x = std::cosf(lat);
-        float z = std::sinf(lat);
+        float x = std::cos(lat);
+        float z = std::sin(lat);
         _points.push_back(GfVec3f(x * yr, y, z * yr));
       }
     } else {
@@ -936,14 +936,14 @@ Shape::AddTorus(short index, float radius, float section, size_t lats,
   float cradius, yval;
 
   for(int i = 0; i < longs; ++i){
-    cradius = radius + (section * std::cosf(i * sectionAngleInc * DEGREES_TO_RADIANS));
-    yval = section * std::sinf(i * sectionAngleInc * DEGREES_TO_RADIANS);
+    cradius = radius + (section * std::cos(i * sectionAngleInc * DEGREES_TO_RADIANS));
+    yval = section * std::sin(i * sectionAngleInc * DEGREES_TO_RADIANS);
     for(int j = 0; j < lats; ++j) {
       _points.push_back(
         GfVec3f(
-          cradius * std::cosf(j * angleInc * DEGREES_TO_RADIANS),
+          cradius * std::cos(j * angleInc * DEGREES_TO_RADIANS),
           yval,
-          cradius * std::sinf(j * angleInc * DEGREES_TO_RADIANS)));
+          cradius * std::sin(j * angleInc * DEGREES_TO_RADIANS)));
     }
   }
 
@@ -1116,9 +1116,9 @@ Shape::AddDisc(short index, float radius, float start, float end, size_t lats,
     float currentAngle = (start + i * step) * DEGREES_TO_RADIANS;
     _points.push_back(
       GfVec3f(
-        std::sinf(currentAngle) * radius, 
+        std::sin(currentAngle) * radius, 
         0.f, 
-        std::cosf(currentAngle) * radius));
+        std::cos(currentAngle) * radius));
   }
   _points.push_back(GfVec3f(0.f));
   size_t lastIdx = _points.size() - 1;
@@ -1173,14 +1173,14 @@ Shape::AddRing(short index, float radius, float section, size_t lats,
     float currentAngle = (i * step) * DEGREES_TO_RADIANS;
     _points.push_back(
       GfVec3f(
-        std::sinf(currentAngle) * innerRadius,
+        std::sin(currentAngle) * innerRadius,
         0.f,
-        std::cosf(currentAngle) * innerRadius));
+        std::cos(currentAngle) * innerRadius));
     _points.push_back(
       GfVec3f(
-        std::sinf(currentAngle) * outerRadius,
+        std::sin(currentAngle) * outerRadius,
         0.f,
-        std::cosf(currentAngle) * outerRadius));
+        std::cos(currentAngle) * outerRadius));
   }
 
   // transform points

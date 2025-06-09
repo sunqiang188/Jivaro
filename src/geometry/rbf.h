@@ -21,8 +21,8 @@ class RBF {
     THINPLATE
   };
 
-  using Matrix = Matrix<float>;
-  using Vector = std::vector<float>;
+  // using Matrix = Matrix<float>;
+  // using Vector = std::vector<float>;
 
   typedef float (*PFNRBFKERNEL)(float r, float eps);
 
@@ -30,18 +30,18 @@ class RBF {
   ~RBF();
   void SetKernelType(int type);
 
-  void Init(const Matrix& keys, const Matrix& values);
-  void Interpolate(const Matrix& querys, Matrix* result);
+  void Init(const Matrix<float>& keys, const Matrix<float>& values);
+  void Interpolate(const Matrix<float>& querys, Matrix<float>* result);
 
 private:
-  void _ComputeEpsilon(const Matrix& matrix);
+  void _ComputeEpsilon(const Matrix<float>& matrix);
   bool          _initialized;
   float         _epsilon;
   int           _type;
   PFNRBFKERNEL  _kernel;
-  Matrix        _A;       // column vector
-  Matrix        _keys;    // keys
-  Matrix        _values;  // values
+  Matrix<float>        _A;       // column vector
+  Matrix<float>        _keys;    // keys
+  Matrix<float>        _values;  // values
 
   // Interpolator Kernels
   static float _MultiQuadricKernel(float r, float eps) {

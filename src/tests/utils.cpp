@@ -7,11 +7,11 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/xform.h>
 #include <pxr/usd/usdGeom/xformOp.h>
-#include <pxr/usd/usdGeom/xformCommonApi.h>
+#include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/usdGeom/mesh.h>
 #include <pxr/usd/usdGeom/points.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
-#include <pxr/usd/usdGeom/primvarsApi.h>
+#include <pxr/usd/usdGeom/primvarsAPI.h>
 #include <pxr/imaging/hd/changeTracker.h>
 
 #include <usdPbd/collisionAPI.h>
